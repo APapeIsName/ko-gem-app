@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function ExploreScreen() {
+export default function PlanScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>

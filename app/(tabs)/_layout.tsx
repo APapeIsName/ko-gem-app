@@ -29,22 +29,22 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: '코리조',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: '탐색',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="magnifyingglass" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="plan"
         options={{
-          title: '기름서',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: '계획',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: '등머랑',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
+          title: '설정',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape" color={color} />,
         }}
       />
     </Tabs>

@@ -5,7 +5,7 @@ import { ImageCardSection } from '@/components/find/list/ImageCardSection';
 import { LocationHeader } from '@/components/find/list/LocationHeader';
 import { ThemedView } from '@/components/ThemedView';
 
-export default function HomeScreen() {
+export default function ExploreScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
