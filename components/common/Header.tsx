@@ -50,7 +50,7 @@ export function Header({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // space-between으로 변경하여 양쪽 끝에 배치
+    justifyContent: 'space-between', 
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 16,

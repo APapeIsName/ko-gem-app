@@ -1,9 +1,9 @@
+import { LOCATION_ICONS, UI_ICONS } from '@/data';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { IconSymbol } from '../ui/IconSymbol';
 import { Header } from './Header';
-import { LOCATION_ICONS, UI_ICONS } from '@/data';
 
 interface LocationHeaderProps {
   location?: string;
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   locationText: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '600',
     color: '#11181C',
   },

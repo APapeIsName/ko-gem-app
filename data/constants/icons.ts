@@ -25,6 +25,10 @@ export const NAVIGATION_ICONS = {
   KEYBOARD_ARROW_DOWN: 'keyboard-arrow-down',
   CLOSE: 'close',
   CHECK: 'check',
+  EVENT: 'event',
+  MAP: 'map',
+  MAP_OUTLINE: 'map-outline',
+  MAP_SHARP: 'map-sharp',
 } as const;
 
 // 일반적인 UI 아이콘들

@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { ICONS, LOCATION_ICONS, UI_ICONS } from '@/data';
+import { LOCATION_ICONS, NAVIGATION_ICONS, UI_ICONS } from '@/data';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 /**
  * IconSymbol 사용 예시 컴포넌트
@@ -16,10 +16,10 @@ export function IconUsageExample() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>기본 아이콘들</Text>
         <View style={styles.iconRow}>
-          <IconSymbol name="home" size={24} color="#007AFF" />
-          <IconSymbol name="search" size={24} color="#007AFF" />
-          <IconSymbol name="settings" size={24} color="#007AFF" />
-          <IconSymbol name="favorite" size={24} color="#007AFF" />
+          <IconSymbol name={NAVIGATION_ICONS.HOME} size={24} color="#007AFF" />
+          <IconSymbol name={NAVIGATION_ICONS.SEARCH} size={24} color="#007AFF" />
+          <IconSymbol name={NAVIGATION_ICONS.SETTINGS} size={24} color="#007AFF" />
+          <IconSymbol name={UI_ICONS.FAVORITE} size={24} color="#007AFF" />
         </View>
       </View>
 

@@ -45,7 +45,7 @@ export default function TabLayout() {
         name="plan"
         options={{
           title: '계획',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name={NAVIGATION_ICONS.LIST} color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={NAVIGATION_ICONS.EVENT} color={color} />,
         }}
       />
       <Tabs.Screen
