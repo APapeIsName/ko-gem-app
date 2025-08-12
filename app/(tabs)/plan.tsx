@@ -1,4 +1,4 @@
-import { Header } from '@/components/common/Header';
+import { TitleHeader } from '@/components/common';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -9,7 +9,7 @@ import { NAVIGATION_ICONS } from '@/data';
 export default function PlanScreen() {
   return (
     <ThemedView style={styles.container}>
-      <Header title="계획" />
+      <TitleHeader title="계획" />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>

@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Header } from '@/components/common/Header';
+import { TitleHeader } from '@/components/common';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { NAVIGATION_ICONS } from '@/data';
 import React from 'react';
@@ -9,7 +9,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 export default function ExploreScreen() {
   return (
     <ThemedView style={styles.container}>
-      <Header title="명소 찾기" />
+      <TitleHeader title="명소 찾기" />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>
