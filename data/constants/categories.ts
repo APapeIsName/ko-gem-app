@@ -14,16 +14,16 @@ export const PLACE_CATEGORIES = {
 
 export type PlaceCategory = typeof PLACE_CATEGORIES[keyof typeof PLACE_CATEGORIES];
 
-// 카테고리별 아이콘 매핑
+// 카테고리별 아이콘 매핑 (MaterialIcons 기준)
 export const CATEGORY_ICONS = {
-  [PLACE_CATEGORIES.RESTAURANT]: 'fork.knife',
-  [PLACE_CATEGORIES.CAFE]: 'cup.and.saucer.fill',
-  [PLACE_CATEGORIES.TOURIST]: 'camera.fill',
-  [PLACE_CATEGORIES.CULTURE]: 'building.columns.fill',
-  [PLACE_CATEGORIES.SHOPPING]: 'bag.fill',
-  [PLACE_CATEGORIES.ENTERTAINMENT]: 'gamecontroller.fill',
-  [PLACE_CATEGORIES.OUTDOOR]: 'leaf.fill',
-  [PLACE_CATEGORIES.TRANSPORT]: 'car.fill',
-  [PLACE_CATEGORIES.ACCOMMODATION]: 'bed.double.fill',
-  [PLACE_CATEGORIES.OTHER]: 'ellipsis.circle.fill'
+  [PLACE_CATEGORIES.RESTAURANT]: 'restaurant',
+  [PLACE_CATEGORIES.CAFE]: 'local-cafe',
+  [PLACE_CATEGORIES.TOURIST]: 'camera-alt',
+  [PLACE_CATEGORIES.CULTURE]: 'museum',
+  [PLACE_CATEGORIES.SHOPPING]: 'shopping-bag',
+  [PLACE_CATEGORIES.ENTERTAINMENT]: 'sports-esports',
+  [PLACE_CATEGORIES.OUTDOOR]: 'park',
+  [PLACE_CATEGORIES.TRANSPORT]: 'directions-car',
+  [PLACE_CATEGORIES.ACCOMMODATION]: 'hotel',
+  [PLACE_CATEGORIES.OTHER]: 'more-horiz'
 } as const;

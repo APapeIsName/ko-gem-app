@@ -6,5 +6,6 @@ export * from './types/places';
 
 // 상수
 export * from './constants/categories';
+export * from './constants/icons';
 export * from './constants/regions';
 

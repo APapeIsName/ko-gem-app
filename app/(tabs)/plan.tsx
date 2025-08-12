@@ -4,6 +4,8 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { NAVIGATION_ICONS } from '@/data';
+
 export default function PlanScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -17,7 +19,7 @@ export default function PlanScreen() {
           <ThemedView style={styles.section}>
             <ThemedText style={styles.sectionTitle}>추천 장소</ThemedText>
             <ThemedView style={styles.recommendationCard}>
-              <IconSymbol name="paperplane.fill" size={24} color="#0a7ea4" />
+              <IconSymbol name={NAVIGATION_ICONS.SEND} size={24} color="#0a7ea4" />
               <ThemedText style={styles.cardTitle}>오늘의 추천</ThemedText>
               <ThemedText style={styles.cardSubtitle}>사용자 맞춤형 장소 추천</ThemedText>
             </ThemedView>

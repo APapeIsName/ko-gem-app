@@ -1,3 +1,4 @@
+import { LOCATION_ICONS, NAVIGATION_ICONS, UI_ICONS } from '@/data';
 import React from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from '../../ThemedText';
@@ -11,20 +12,20 @@ interface LocationHeaderProps {
 }
 
 export function LocationHeader({ 
-  location = "소소개멈", 
+  location = "서울", 
   onLocationPress, 
   onMapPress 
 }: LocationHeaderProps) {
   return (
     <ThemedView style={styles.container}>
       <TouchableOpacity style={styles.locationContainer} onPress={onLocationPress}>
-        <IconSymbol name="location.fill" size={16} color="#687076" />
+        <IconSymbol name={LOCATION_ICONS.LOCATION_ON} size={16} color="#687076" />
         <ThemedText style={styles.locationText}>{location}</ThemedText>
-        <IconSymbol name="chevron.down" size={12} color="#687076" />
+        <IconSymbol name={NAVIGATION_ICONS.KEYBOARD_ARROW_DOWN} size={12} color="#687076" />
       </TouchableOpacity>
       
       <TouchableOpacity style={styles.mapButton} onPress={onMapPress}>
-        <IconSymbol name="map.fill" size={20} color="#687076" />
+        <IconSymbol name={UI_ICONS.MAP} size={20} color="#687076" />
       </TouchableOpacity>
     </ThemedView>
   );
