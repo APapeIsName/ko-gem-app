@@ -11,7 +11,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.container}>
         <LocationHeader />
         <ImageCardSection title="코젬 추천 픽 👍" cards={mockPlaces.kogemPicks} />
-        <ImageCardSection title="지금 핫한 곳 🔥" cards={mockPlaces.popularPlaces} />
+        <ImageCardSection title="실시간 핫플레이스 🔥" cards={mockPlaces.popularPlaces} />
       </ThemedView>
     </SafeAreaView>
   );
