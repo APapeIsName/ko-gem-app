@@ -1,4 +1,5 @@
 import { LOCATION_ICONS, UI_ICONS } from '@/data';
+import { PlaceCity } from '@/store/types/places';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../ThemedText';
@@ -6,7 +7,7 @@ import { IconSymbol } from '../ui/IconSymbol';
 import { Header } from './Header';
 
 interface LocationHeaderProps {
-  location?: string;
+  location?: PlaceCity;
   onLocationPress?: () => void;
   onMapPress?: () => void;
   useSafeArea?: boolean;
@@ -17,7 +18,7 @@ interface LocationHeaderProps {
  * Header 컴포넌트의 leftComponent와 rightComponent를 사용하여 구현합니다.
  */
 export function LocationHeader({ 
-  location = "서울", 
+  location = PlaceCity.ALL, 
   onLocationPress, 
   onMapPress,
   useSafeArea = true
@@ -31,7 +32,7 @@ export function LocationHeader({
         activeOpacity={0.7}
       >
         <IconSymbol name={LOCATION_ICONS.LOCATION_ON} size={20} color="#687076" />
-        <ThemedText style={styles.locationText}>{location}</ThemedText>
+        <ThemedText style={styles.locationText}>{location.toString()}</ThemedText>
         <IconSymbol name="keyboard-arrow-down" size={18} color="#687076" />
       </TouchableOpacity>
     </View>

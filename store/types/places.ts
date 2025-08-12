@@ -40,6 +40,7 @@ export interface PlaceSearchParams {
 }
 
 export enum PlaceCity {
+  ALL = '전국',
   SEOUL = '서울',
   GYEONGGI = '경기',
   GANGWON = '강원',

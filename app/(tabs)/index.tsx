@@ -3,15 +3,21 @@ import { ImageCardSection } from '@/components/find/list/ImageCardSection';
 import { ThemedView } from '@/components/ThemedView';
 import { mockPlaces } from '@/data';
 import { usePlacesStore } from '@/store/slices/placesSlice';
+import { PlaceCity } from '@/store/types/places';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
-  const { recommendedPlaces, popularPlaces, filterOptions, setFilterOptions } = usePlacesStore();
+  const { recommendedPlaces, popularPlaces, placeCity, setPlaceCity } = usePlacesStore();
+
+  useEffect(() => {
+    setPlaceCity(PlaceCity.ALL);
+  }, []);
 
   return (
     <ThemedView style={styles.container}>
       <LocationHeader 
-        location="서울"
+        location={placeCity}
         onLocationPress={() => console.log('위치 선택')}
         onMapPress={() => console.log('지도 열기')}
         useSafeArea={true}

@@ -1,24 +1,20 @@
 import { create } from 'zustand';
-import { PlaceCity, PlaceFilterOptions, PopularPlace, RecommendPlace } from '../types/places';
+import { PlaceCity, PopularPlace, RecommendPlace } from '../types/places';
 
 interface PlacesState {
   recommendedPlaces: RecommendPlace[];
   popularPlaces: PopularPlace[];
-  filterOptions: PlaceFilterOptions;
-  setFilterOptions: (options: PlaceFilterOptions) => void;
+//   filterOptions: PlaceFilterOptions;
+//   setFilterOptions: (options: PlaceFilterOptions) => void;
+  placeCity: PlaceCity;
+  setPlaceCity: (city: PlaceCity) => void;
 }   
 
 export const usePlacesStore = create<PlacesState>((set) => ({
   recommendedPlaces: [],
   popularPlaces: [],
-  filterOptions: {
-    city: PlaceCity.SEOUL,
-    categories: [],
-    priceRange: [0, 100000],
-    rating: 0,
-    distance: 0,
-  },
-  setFilterOptions: (options) => set({ filterOptions: options }),
+  placeCity: PlaceCity.BUSAN,
+  setPlaceCity: (city) => set({ placeCity: city }),
 }));
 
 export default usePlacesStore;
