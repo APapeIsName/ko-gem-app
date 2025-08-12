@@ -1,8 +1,7 @@
+import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
-import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
+import { ThemedText } from '../../ThemedText';
 
 interface ImageCardProps {
   image: any;

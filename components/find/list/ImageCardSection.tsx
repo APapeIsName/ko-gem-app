@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
+import { ThemedText } from '../../ThemedText';
+import { ThemedView } from '../../ThemedView';
 import { ImageCard } from './ImageCard';
 
 interface CardData {

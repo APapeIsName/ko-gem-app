@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
-import { IconSymbol } from './ui/IconSymbol';
+import { StyleSheet, TouchableOpacity } from 'react-native';
+import { ThemedText } from '../../ThemedText';
+import { ThemedView } from '../../ThemedView';
+import { IconSymbol } from '../../ui/IconSymbol';
 
 interface LocationHeaderProps {
   location?: string;

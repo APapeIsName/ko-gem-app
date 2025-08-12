@@ -1,8 +1,8 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ImageCardSection } from '@/components/ImageCardSection';
-import { LocationHeader } from '@/components/LocationHeader';
+import { ImageCardSection } from '@/components/find/list/ImageCardSection';
+import { LocationHeader } from '@/components/find/list/LocationHeader';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
@@ -12,7 +12,7 @@ export default function HomeScreen() {
         <LocationHeader />
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <ImageCardSection 
-            title="3oGem 바격" 
+            title="코젬 픽"
             cards={[
               {
                 image: require('@/assets/images/partial-react-logo.png'),
