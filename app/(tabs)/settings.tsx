@@ -1,18 +1,16 @@
 import React from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Header } from '@/components/common/Header';
 
 export default function SettingsScreen() {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <ThemedView style={styles.header}>
-            <ThemedText style={styles.title}>설정</ThemedText>
-          </ThemedView>
-          
+    <ThemedView style={styles.container}>
+      <Header type="title" title="설정" />
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ThemedView style={styles.content}>
           <ThemedView style={styles.section}>
             <ThemedText style={styles.sectionTitle}>계정</ThemedText>
             <ThemedView style={styles.menuItem}>
@@ -38,17 +36,13 @@ export default function SettingsScreen() {
               <ThemedText>버전 정보</ThemedText>
             </ThemedView>
           </ThemedView>
-        </ScrollView>
-      </ThemedView>
-    </SafeAreaView>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -56,16 +50,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
+  content: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#11181C',
+    paddingTop: 20,
   },
   section: {
     marginTop: 20,
@@ -75,10 +62,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#11181C',
     marginBottom: 12,
-    paddingHorizontal: 16,
   },
   menuItem: {
-    paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',

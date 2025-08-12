@@ -1,20 +1,19 @@
+import { Header } from '@/components/common/Header';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NAVIGATION_ICONS } from '@/data';
 
 export default function PlanScreen() {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <ThemedView style={styles.header}>
-            <ThemedText style={styles.title}>기름서</ThemedText>
-            <ThemedText style={styles.subtitle}>새로운 장소와 경험을 발견하세요</ThemedText>
-          </ThemedView>
+    <ThemedView style={styles.container}>
+      <Header type="title" title="기름서" />
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ThemedView style={styles.content}>
+          <ThemedText style={styles.subtitle}>새로운 장소와 경험을 발견하세요</ThemedText>
           
           <ThemedView style={styles.section}>
             <ThemedText style={styles.sectionTitle}>추천 장소</ThemedText>
@@ -42,17 +41,13 @@ export default function PlanScreen() {
               </ThemedView>
             </ThemedView>
           </ThemedView>
-        </ScrollView>
-      </ThemedView>
-    </SafeAreaView>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -60,25 +55,18 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
+  content: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#11181C',
-    marginBottom: 8,
+    paddingTop: 20,
   },
   subtitle: {
     fontSize: 16,
     color: '#687076',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   section: {
     marginTop: 20,
-    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -116,7 +104,6 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 14,
-    color: '#495057',
-    fontWeight: '500',
+    color: '#687076',
   },
 });
