@@ -1,4 +1,5 @@
-export * from './authSlice';
-export * from './placesSlice';
-export * from './userSlice';
-export * from './uiSlice';
+export * from '../slices/authSlice';
+export * from '../slices/placesSlice';
+export * from '../slices/uiSlice';
+export * from '../slices/userSlice';
+

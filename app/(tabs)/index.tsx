@@ -2,9 +2,12 @@ import { LocationHeader } from '@/components/common/LocationHeader';
 import { ImageCardSection } from '@/components/find/list/ImageCardSection';
 import { ThemedView } from '@/components/ThemedView';
 import { mockPlaces } from '@/data';
+import { usePlacesStore } from '@/store/slices/placesSlice';
 import { StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
+  const { recommendedPlaces, popularPlaces, filterOptions, setFilterOptions } = usePlacesStore();
+
   return (
     <ThemedView style={styles.container}>
       <LocationHeader 

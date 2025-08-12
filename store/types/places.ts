@@ -39,10 +39,41 @@ export interface PlaceSearchParams {
   offset?: number;
 }
 
+export enum PlaceCity {
+  SEOUL = '서울',
+  GYEONGGI = '경기',
+  GANGWON = '강원',
+  CHUNGCHEONG = '충청',
+  JEOLLA = '전라',
+  GYEONGSANG = '경상',
+  JEJU = '제주',
+  BUSAN = '부산',
+  DAEGU = '대구',
+  ULSAN = '울산',
+  INCHEON = '인천',
+  DAEJEON = '대전',
+  GWANGJU = '광주',
+}
+
 // 장소 필터 옵션
 export interface PlaceFilterOptions {
+  city: PlaceCity;
   categories: string[];
   priceRange: [number, number];
   rating: number;
   distance: number;
+}
+
+export interface RecommendPlace {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+}
+
+export interface PopularPlace {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
 }

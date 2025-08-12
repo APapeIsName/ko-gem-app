@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { Header } from './Header';
 
@@ -21,12 +21,14 @@ export function TitleHeader({
   useSafeArea = true 
 }: TitleHeaderProps) {
   const leftComponent = (
-    <ThemedText 
-      style={[styles.title, titleStyle]} 
-      numberOfLines={1}
-    >
-      {title}
-    </ThemedText>
+    <View style={styles.titleContainer}>
+      <ThemedText 
+        style={[styles.title, titleStyle]} 
+        numberOfLines={1}
+      >
+        {title}
+      </ThemedText>
+    </View>
   );
 
   return (
@@ -38,11 +40,15 @@ export function TitleHeader({
 }
 
 const styles = StyleSheet.create({
+  titleContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 40, // LocationHeader의 아이콘 버튼 높이와 맞춤
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: '#11181C',
-    flex: 1,
     textAlign: 'left',
   },
 });
