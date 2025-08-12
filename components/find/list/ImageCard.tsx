@@ -1,15 +1,8 @@
+import { ImageCardProps } from '@/types/find/list/type';
 import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../ThemedText';
-
-interface ImageCardProps {
-  image: any;
-  title: string;
-  subtitle: string;
-  overlay: string;
-  onPress?: () => void;
-}
 
 export function ImageCard({ image, title, subtitle, overlay, onPress }: ImageCardProps) {
   return (

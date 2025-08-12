@@ -1,20 +1,9 @@
+import { ImageCardSectionProps } from '@/types/find/list/type';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '../../ThemedText';
 import { ThemedView } from '../../ThemedView';
 import { ImageCard } from './ImageCard';
-
-interface CardData {
-  image: any;
-  title: string;
-  subtitle: string;
-  overlay: string;
-}
-
-interface ImageCardSectionProps {
-  title: string;
-  cards: CardData[];
-}
 
 export function ImageCardSection({ title, cards }: ImageCardSectionProps) {
   return (
