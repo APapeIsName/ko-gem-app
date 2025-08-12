@@ -9,7 +9,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 export default function ExploreScreen() {
   return (
     <ThemedView style={styles.container}>
-      <Header title="탐색" />
+      <Header title="명소 찾기" />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>
