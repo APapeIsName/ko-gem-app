@@ -1,13 +1,13 @@
-import React from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Header } from '@/components/common/Header';
+import React from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
 
 export default function SettingsScreen() {
   return (
     <ThemedView style={styles.container}>
-      <Header type="title" title="설정" />
+      <Header title="설정" />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>

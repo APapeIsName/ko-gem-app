@@ -1,15 +1,15 @@
-import React from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Header } from '@/components/common/Header';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { NAVIGATION_ICONS, UI_ICONS } from '@/data';
+import { NAVIGATION_ICONS } from '@/data';
+import React from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
 
 export default function ExploreScreen() {
   return (
     <ThemedView style={styles.container}>
-      <Header type="title" title="탐색" />
+      <Header title="탐색" />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>

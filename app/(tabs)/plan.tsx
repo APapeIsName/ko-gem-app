@@ -9,7 +9,7 @@ import { NAVIGATION_ICONS } from '@/data';
 export default function PlanScreen() {
   return (
     <ThemedView style={styles.container}>
-      <Header type="title" title="기름서" />
+      <Header title="기름서" />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>
