@@ -1,26 +1,49 @@
-import { CardData } from '@/data';
-
-// ImageCard 컴포넌트 props 타입
-export interface ImageCardProps {
-  /** 카드 이미지 */
-  image: any;
-  /** 카드 제목 */
+// 장소 기본 타입
+export interface Place {
+  id: string;
+  image: any; // expo-image source
   title: string;
-  /** 카드 부제목 */
   subtitle: string;
-  /** 이미지 위에 표시되는 오버레이 텍스트 */
   overlay: string;
-  /** 카드 터치 시 실행될 함수 (선택사항) */
+  category: string;
+  rating: number;
+  reviewCount: number;
+  isRecommended: boolean;
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+}
+
+// 섹션 타입
+export interface Section {
+  id: string;
+  title: string;
+  type: 'horizontal-scroll' | 'grid' | 'list';
+  items: Place[];
+  maxItems?: number;
+  showMoreButton?: boolean;
+  moreButtonText?: string;
+  onMorePress?: () => void;
+}
+
+// 이미지 카드 섹션 Props
+export interface ImageCardSectionProps {
+  section: Section;
+  onItemPress?: (item: Place) => void;
+  onMorePress?: () => void;
+}
+
+// 이미지 카드 Props
+export interface ImageCardProps {
+  item: Place;
   onPress?: () => void;
 }
 
-// ImageCardSection 컴포넌트 props 타입
-export interface ImageCardSectionProps {
-  /** 섹션 제목 */
-  title: string;
-  /** 카드 데이터 배열 */
-  cards: CardData[];
+// 더보기 버튼 Props
+export interface MoreButtonProps {
+  text?: string;
+  onPress?: () => void;
+  size?: 'small' | 'medium' | 'large';
 }
-
-// CardData 타입을 다시 export (기존 코드와의 호환성을 위해)
-export { CardData };

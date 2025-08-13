@@ -1,9 +1,11 @@
+import { HorizontalScrollSection } from '@/components/common/HorizontalScrollSection';
 import { LocationHeader } from '@/components/common/LocationHeader';
-import { ImageCardSection } from '@/components/home/list/ImageCardSection';
+import { ImageCard } from '@/components/home/list/ImageCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { mockPlaces, NAVIGATION_ICONS } from '@/data';
+import { NAVIGATION_ICONS } from '@/data';
+import { homeSections } from '@/data/mock/places';
 import { usePlacesStore } from '@/store/slices/placesSlice';
 import { PlaceCity } from '@/store/types/places';
 import { useRouter } from 'expo-router';
@@ -11,7 +13,7 @@ import { useEffect } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
-  const { recommendedPlaces, popularPlaces, placeCity, setPlaceCity } = usePlacesStore();
+  const { placeCity, setPlaceCity } = usePlacesStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +29,24 @@ export default function HomeScreen() {
   const handleSearchPress = () => {
     router.push('/search');
   };
+
+  const handleItemPress = (item: any) => {
+    console.log('아이템 선택:', item.title);
+    // TODO: 아이템 상세 화면으로 이동
+  };
+
+  const handleMorePress = (sectionId: string) => {
+    console.log('더보기:', sectionId);
+    // TODO: 더보기 화면으로 이동
+  };
+
+  const renderImageCard = (item: any, index: number) => (
+    <ImageCard 
+      key={item.id || index}
+      item={item}
+      onPress={() => handleItemPress(item)}
+    />
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -53,8 +73,14 @@ export default function HomeScreen() {
           </ThemedView>
 
           {/* 홈 메인 컨텐츠 */}
-          <ImageCardSection title="코젬 추천 픽 👍" cards={mockPlaces.kogemPicks} />
-          <ImageCardSection title="지금 핫한 곳 🔥" cards={mockPlaces.popularPlaces} />
+          {homeSections.map((section) => (
+            <HorizontalScrollSection
+              key={section.id}
+              section={section}
+              renderItem={renderImageCard}
+              onMorePress={() => handleMorePress(section.id)}
+            />
+          ))}
         </ThemedView>
       </ScrollView>
     </ThemedView>
@@ -74,7 +100,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 20,
-    zIndex: 1, // 낮은 zIndex로 설정
   },
   searchSection: {
     marginBottom: 20,
@@ -90,28 +115,5 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     marginLeft: 10,
     color: '#687076',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: '#e0e0e0',
-    borderRadius: 15,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  tagText: {
-    fontSize: 14,
-    color: '#333',
   },
 });
