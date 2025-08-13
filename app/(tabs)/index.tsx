@@ -42,10 +42,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    zIndex: 1, // 낮은 zIndex로 설정
   },
   content: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 20,
+    zIndex: 1, // 낮은 zIndex로 설정
   },
 });

@@ -1,11 +1,18 @@
 import { LOCATION_ICONS, UI_ICONS } from '@/data';
 import { PlaceCity } from '@/store/types/places';
-import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Animated, Easing, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { HeaderDropdown } from '../home/list/HeaderDropdown';
 import { ThemedText } from '../ThemedText';
 import { IconSymbol } from '../ui/IconSymbol';
 import { Header } from './Header';
+
+// Android에서 LayoutAnimation 활성화
+// if (Platform.OS === 'android') {
+//   if (UIManager.setLayoutAnimationEnabledExperimental) {
+//     UIManager.setLayoutAnimationEnabledExperimental(true);
+//   }
+// }
 
 interface LocationHeaderProps {
   location?: PlaceCity;
@@ -27,16 +34,120 @@ export function LocationHeader({
   useSafeArea = true
 }: LocationHeaderProps) {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const overlayAnim = useRef(new Animated.Value(0)).current;
+  const isAnimating = useRef(false);
+
+  const dropdownStyle = { 
+    opacity: opacityAnim,
+    transform: [
+      {
+        translateY: slideAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [-30, 0],
+        }),
+      },
+    ],
+    zIndex: 1000,
+  }
+
+  const overlayStyle = {
+    opacity: overlayAnim,
+    zIndex: 999,
+  }
+
+  const onHeaderLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    setHeaderHeight(height);
+  };
 
   const handleLocationPress = () => {
-    setIsDropdownVisible(!isDropdownVisible);
+    if (isAnimating.current) return;
+    isAnimating.current = true;
+    
+    if (isDropdownVisible) {
+      // 드롭다운을 숨기는 애니메이션
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayAnim, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsDropdownVisible(false);
+        isAnimating.current = false;
+      });
+    } else {
+      // 드롭다운을 보이는 애니메이션
+      setIsDropdownVisible(true);
+      
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayAnim, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        isAnimating.current = false;
+      });
+    }
   };
 
   const handleCitySelect = (city: PlaceCity) => {
     if (onLocationChange) {
       onLocationChange(city);
     }
-    setIsDropdownVisible(false);
+    // 도시 선택 시 드롭다운을 숨기는 애니메이션
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIsDropdownVisible(false);
+    });
   };
 
   // 왼쪽 영역: 위치 정보
@@ -75,20 +186,73 @@ export function LocationHeader({
         useSafeArea={useSafeArea}
         leftComponent={leftComponent}
         rightComponent={rightComponent}
+        style={styles.header} // 👈 zIndex 적용
+        onLayout={onHeaderLayout}
       />
       
       {/* 도시 선택 드롭다운 */}
       {isDropdownVisible && (
-        <HeaderDropdown
-          selectedCity={location}
-          onCitySelect={handleCitySelect}
-        />
+        <Animated.View
+          style={[styles.dropdown, dropdownStyle, { top: headerHeight }]} // 👈 zIndex 적용
+        >
+          <HeaderDropdown
+            selectedCity={location}
+            onCitySelect={handleCitySelect}
+          />
+        </Animated.View>
+      )}
+      
+      {/* 반투명 배경 오버레이 */}
+      {isDropdownVisible && (
+        <Animated.View style={[styles.overlay, overlayStyle]}>
+          <TouchableOpacity 
+            style={styles.overlayTouchable}
+            onPress={handleLocationPress}
+            activeOpacity={1}
+          />
+        </Animated.View>
       )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    zIndex: 9999,
+    elevation: 9999, // Android용
+  },
+  header: {
+    zIndex: 10000, // 헤더를 가장 위에
+    elevation: 10000, // Android용
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    zIndex: 9998,
+    elevation: 9998, // Android용
+  },
+  overlayTouchable: {
+    flex: 1,
+  },
+  dropdown: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 9999, // 헤더보다는 아래, 오버레이보다는 위
+    elevation: 9999, // Android용
+    // 그림자 효과 추가
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
