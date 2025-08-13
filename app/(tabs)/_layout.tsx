@@ -35,13 +35,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
-        options={{
-          title: '탐색',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name={NAVIGATION_ICONS.SEARCH} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="plan"
         options={{
           title: '계획',
