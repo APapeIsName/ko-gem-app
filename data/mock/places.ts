@@ -170,6 +170,90 @@ export const mockPlaces = {
     }
   ],
 
+  // 요즘 뜨는 행사
+  trendingEvents: [
+    {
+      id: '11',
+      image: require('@/assets/images/partial-react-logo.png'),
+      title: "봄맞이 꽃 축제",
+      subtitle: "벚꽃 만개 시즌",
+      overlay: "HOT",
+      category: "축제",
+      rating: 4.8,
+      reviewCount: 456,
+      isRecommended: true,
+      location: {
+        latitude: 37.5665,
+        longitude: 126.9780,
+        address: "서울특별시 강남구"
+      }
+    },
+    {
+      id: '12',
+      image: require('@/assets/images/partial-react-logo.png'),
+      title: "야외 콘서트",
+      subtitle: "라이브 음악",
+      overlay: "NEW",
+      category: "공연",
+      rating: 4.7,
+      reviewCount: 234,
+      isRecommended: true,
+      location: {
+        latitude: 37.5665,
+        longitude: 126.9780,
+        address: "서울특별시 강남구"
+      }
+    },
+    {
+      id: '13',
+      image: require('@/assets/images/partial-react-logo.png'),
+      title: "푸드 트럭 페스티벌",
+      subtitle: "다양한 음식",
+      overlay: "EVENT",
+      category: "축제",
+      rating: 4.5,
+      reviewCount: 189,
+      isRecommended: true,
+      location: {
+        latitude: 37.5665,
+        longitude: 126.9780,
+        address: "서울특별시 강남구"
+      }
+    },
+    {
+      id: '14',
+      image: require('@/assets/images/partial-react-logo.png'),
+      title: "전통 문화 체험",
+      subtitle: "한복 입기",
+      overlay: "POP",
+      category: "체험",
+      rating: 4.6,
+      reviewCount: 167,
+      isRecommended: true,
+      location: {
+        latitude: 37.5665,
+        longitude: 126.9780,
+        address: "서울특별시 강남구"
+      }
+    },
+    {
+      id: '15',
+      image: require('@/assets/images/partial-react-logo.png'),
+      title: "야간 불꽃 축제",
+      subtitle: "밤하늘의 불꽃",
+      overlay: "SPECIAL",
+      category: "축제",
+      rating: 4.9,
+      reviewCount: 312,
+      isRecommended: true,
+      location: {
+        latitude: 37.5665,
+        longitude: 126.9780,
+        address: "서울특별시 강남구"
+      }
+    }
+  ],
+
   // 카테고리별 장소
   categories: {
     음식점: [
@@ -230,5 +314,14 @@ export const homeSections: Section[] = [
     maxItems: 5,
     moreButtonText: '더보기',
     onMorePress: () => console.log('지금 핫한 곳 더보기')
+  },
+  {
+    id: 'trending-events',
+    title: '요즘 뜨는 행사 🎉',
+    type: 'horizontal-scroll',
+    items: mockPlaces.trendingEvents,
+    maxItems: 5,
+    moreButtonText: '더보기',
+    onMorePress: () => console.log('요즘 뜨는 행사 더보기')
   }
 ];

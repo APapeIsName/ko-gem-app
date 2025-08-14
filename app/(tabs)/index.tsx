@@ -32,7 +32,35 @@ export default function HomeScreen() {
 
   const handleItemPress = (item: any) => {
     console.log('아이템 선택:', item.title);
-    // TODO: 아이템 상세 화면으로 이동
+    
+    // 카테고리에 따라 다른 상세 페이지로 이동
+    if (item.category === '축제' || item.category === '공연' || item.category === '체험') {
+      // 행사인 경우
+      router.push({
+        pathname: '/event-detail',
+        params: {
+          id: item.id,
+          title: item.title,
+          subtitle: item.subtitle,
+          image: item.image,
+          overlay: item.overlay,
+          category: item.category
+        }
+      });
+    } else {
+      // 장소인 경우
+      router.push({
+        pathname: '/place-detail',
+        params: {
+          id: item.id,
+          title: item.title,
+          subtitle: item.subtitle,
+          image: item.image,
+          overlay: item.overlay,
+          category: item.category
+        }
+      });
+    }
   };
 
   const handleMorePress = (sectionId: string) => {
@@ -81,6 +109,9 @@ export default function HomeScreen() {
               onMorePress={() => handleMorePress(section.id)}
             />
           ))}
+
+          {/* 바텀 내비게이션 바를 위한 여백 */}
+          <ThemedView style={styles.bottomSpacer} />
         </ThemedView>
       </ScrollView>
     </ThemedView>
@@ -115,5 +146,8 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     marginLeft: 10,
     color: '#687076',
+  },
+  bottomSpacer: {
+    height: 80, // 바텀 내비게이션 바의 높이에 맞춰 여백 추가
   },
 });
