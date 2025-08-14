@@ -1,48 +1,90 @@
-import { TitleHeader } from '@/components/common';
+import { AddPlanButton } from '@/components/plans/AddPlanButton';
+import { PlanItem } from '@/components/plans/PlanItem';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { ScrollView, StyleSheet } from 'react-native';
-
-import { NAVIGATION_ICONS } from '@/data';
+import { mockPlans } from '@/data/mock/plans';
+import { Plan, PlanItem as PlanItemType } from '@/types/plan/type';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function PlanScreen() {
+  const router = useRouter();
+  const [plans] = useState<Plan[]>(mockPlans);
+
+  // 현재 날짜를 YYYY-MM-DD 형식으로 가져오기
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const currentDate = getCurrentDate();
+
+  // 현재 날짜의 계획이 있는지 확인
+  const currentPlan = plans.find(plan => plan.date === currentDate);
+  const hasCurrentPlan = currentPlan && currentPlan.items.length > 0;
+
+  const handleAddPlan = () => {
+    router.push({
+      pathname: '/plan-write',
+      params: { date: currentDate }
+    });
+  };
+
+  const handlePlanItemPress = (item: PlanItemType) => {
+    // TODO: 계획 상세 보기 또는 편집 화면으로 이동
+    console.log('계획 아이템 선택:', item);
+  };
+
+  const handleToggleComplete = (itemId: string) => {
+    // TODO: 계획 완료 상태 토글 로직 구현
+    console.log('계획 완료 토글:', itemId);
+  };
+
+  const renderPlanItem = ({ item }: { item: PlanItemType }) => (
+    <PlanItem
+      item={item}
+      onPress={() => handlePlanItemPress(item)}
+      onToggleComplete={() => handleToggleComplete(item.id)}
+    />
+  );
+
+  const renderAddButton = () => (
+    <AddPlanButton onPress={handleAddPlan} />
+  );
+
   return (
     <ThemedView style={styles.container}>
-      <TitleHeader title="계획" />
-      
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <ThemedView style={styles.content}>
-          <ThemedText style={styles.subtitle}>새로운 장소와 경험을 발견하세요</ThemedText>
-          
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>추천 장소</ThemedText>
-            <ThemedView style={styles.recommendationCard}>
-              <IconSymbol name={NAVIGATION_ICONS.SEND} size={24} color="#0a7ea4" />
-              <ThemedText style={styles.cardTitle}>오늘의 추천</ThemedText>
-              <ThemedText style={styles.cardSubtitle}>사용자 맞춤형 장소 추천</ThemedText>
-            </ThemedView>
-          </ThemedView>
-          
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>인기 태그</ThemedText>
-            <ThemedView style={styles.tagsContainer}>
-              <ThemedView style={styles.tag}>
-                <ThemedText style={styles.tagText}>자연</ThemedText>
-              </ThemedView>
-              <ThemedView style={styles.tag}>
-                <ThemedText style={styles.tagText}>문화</ThemedText>
-              </ThemedView>
-              <ThemedView style={styles.tag}>
-                <ThemedText style={styles.tagText}>맛집</ThemedText>
-              </ThemedView>
-              <ThemedView style={styles.tag}>
-                <ThemedText style={styles.tagText}>역사</ThemedText>
-              </ThemedView>
-            </ThemedView>
-          </ThemedView>
+      {/* 상단 헤더 */}
+      <ThemedView style={styles.header}>
+        <ThemedText style={styles.headerTitle}>계획</ThemedText>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddPlan}
+          activeOpacity={0.7}
+        >
+          <IconSymbol name="add" size={24} color="#11181C" />
+        </TouchableOpacity>
+      </ThemedView>
+
+      {/* 날짜 표시 (계획이 있을 때만) */}
+      {hasCurrentPlan && (
+        <ThemedView style={styles.dateSection}>
+          <ThemedText style={styles.dateText}>{currentDate}</ThemedText>
         </ThemedView>
-      </ScrollView>
+      )}
+
+      {/* 계획 리스트 */}
+      <FlatList
+        data={currentPlan?.items || []}
+        renderItem={renderPlanItem}
+        keyExtractor={(item) => item.id}
+        style={styles.planList}
+        contentContainerStyle={styles.planListContent}
+        showsVerticalScrollIndicator={false}
+        ListFooterComponent={renderAddButton}
+      />
     </ThemedView>
   );
 }
@@ -50,60 +92,44 @@ export default function PlanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F9FA',
   },
-  scrollView: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F3F4',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#11181C',
+  },
+  addButton: {
+    padding: 8,
+  },
+  dateSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F3F4',
+  },
+  dateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#11181C',
+  },
+  planList: {
     flex: 1,
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#687076',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  section: {
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#11181C',
-    marginBottom: 16,
-  },
-  recommendationCard: {
-    backgroundColor: '#f8f9fa',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#11181C',
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    color: '#687076',
-    textAlign: 'center',
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: '#e9ecef',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  tagText: {
-    fontSize: 14,
-    color: '#687076',
+  planListContent: {
+    padding: 16,
+    paddingBottom: 32,
   },
 });

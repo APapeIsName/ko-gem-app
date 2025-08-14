@@ -17,9 +17,12 @@ export function HeaderDropdown({ selectedCity, onCitySelect }: HeaderDropdownPro
   return (
     <ThemedView style={styles.container}>
       <ScrollView 
-        style={styles.scrollView} 
-        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+        scrollEventThrottle={16}
+        onScroll={() => {}}
       >
         {cities.map((city) => (
           <TouchableOpacity
@@ -51,6 +54,7 @@ export function HeaderDropdown({ selectedCity, onCitySelect }: HeaderDropdownPro
 
 const styles = StyleSheet.create({
   container: {
+    height: 200,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
@@ -64,7 +68,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   scrollView: {
-    maxHeight: 200,
+    flex: 1,
   },
   contentContainer: {
     paddingHorizontal: 16,

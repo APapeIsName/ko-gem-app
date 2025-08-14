@@ -4,18 +4,24 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../ThemedText';
 
-export function ImageCard({ image, title, subtitle, overlay, onPress }: ImageCardProps) {
+export function ImageCard({ item, onPress }: ImageCardProps) {
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    }
+  };
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.imageContainer}>
-        <Image source={image} style={styles.image} contentFit="cover" />
+        <Image source={item.image} style={styles.image} contentFit="cover" />
         <View style={styles.overlay}>
-          <ThemedText style={styles.overlayText}>{overlay}</ThemedText>
+          <ThemedText style={styles.overlayText}>{item.overlay}</ThemedText>
         </View>
       </View>
       <View style={styles.textContainer}>
-        <ThemedText style={styles.title} numberOfLines={1}>{title}</ThemedText>
-        <ThemedText style={styles.subtitle} numberOfLines={1}>{subtitle}</ThemedText>
+        <ThemedText style={styles.title} numberOfLines={1}>{item.title}</ThemedText>
+        <ThemedText style={styles.subtitle} numberOfLines={1}>{item.subtitle}</ThemedText>
       </View>
     </TouchableOpacity>
   );
@@ -23,15 +29,15 @@ export function ImageCard({ image, title, subtitle, overlay, onPress }: ImageCar
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    maxWidth: '30%',
+    width: 140, // 고정된 너비 설정
+    marginRight: 12, // 오른쪽 마진으로 간격 조정
   },
   imageContainer: {
     position: 'relative',
     marginBottom: 8,
   },
   image: {
-    width: '100%',
+    width: 140, // 고정된 너비
     height: 120,
     borderRadius: 12,
   },

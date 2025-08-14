@@ -12,6 +12,8 @@ interface HeaderProps {
   style?: any;
   /** SafeAreaView 사용 여부 (기본값: true) */
   useSafeArea?: boolean;
+  /** 레이아웃 이벤트 핸들러 */
+  onLayout?: (event: any) => void;
 }
 
 /**
@@ -23,7 +25,8 @@ export function Header({
   leftComponent,
   rightComponent,
   style, 
-  useSafeArea = true
+  useSafeArea = true,
+  onLayout
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
   
@@ -37,7 +40,7 @@ export function Header({
   ];
 
   return (
-    <ThemedView style={containerStyle}>
+    <ThemedView style={containerStyle} onLayout={onLayout}>
       {/* 왼쪽 영역 */}
       {leftComponent}
 
