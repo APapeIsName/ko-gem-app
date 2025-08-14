@@ -47,3 +47,18 @@ export interface MoreButtonProps {
   onPress?: () => void;
   size?: 'small' | 'medium' | 'large';
 }
+
+// 검색 관련 타입 추가
+export interface SearchResult {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  type: 'place' | 'event';
+}
+
+export interface SearchSuggestion {
+  id: string;
+  keyword: string;
+  type: 'recent' | 'popular';
+}

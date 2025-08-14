@@ -1,4 +1,4 @@
-import { Section } from '@/types/find/list/type';
+import { SearchResult, SearchSuggestion, Section } from '@/types/find/list/type';
 
 // 장소 목업 데이터
 export const mockPlaces = {
@@ -324,4 +324,53 @@ export const homeSections: Section[] = [
     moreButtonText: '더보기',
     onMorePress: () => console.log('요즘 뜨는 행사 더보기')
   }
+];
+
+// 검색용 목업 데이터 추가
+export const searchKeywords: SearchSuggestion[] = [
+  // 인기 검색어
+  { id: '1', keyword: '봄맞이 꽃 축제', type: 'popular' },
+  { id: '2', keyword: '도교먹 배재로', type: 'popular' },
+  { id: '3', keyword: '한강공원', type: 'popular' },
+  { id: '4', keyword: '남산타워', type: 'popular' },
+  { id: '5', keyword: '홍대거리', type: 'popular' },
+  { id: '6', keyword: '강남역', type: 'popular' },
+  { id: '7', keyword: '이태원', type: 'popular' },
+  { id: '8', keyword: '명동', type: 'popular' },
+  { id: '9', keyword: '동대문', type: 'popular' },
+  { id: '10', keyword: '잠실', type: 'popular' },
+  { id: '11', keyword: '올림픽공원', type: 'popular' },
+  { id: '12', keyword: '여의도', type: 'popular' },
+  { id: '13', keyword: '마포구', type: 'popular' },
+  { id: '14', keyword: '서초구', type: 'popular' },
+  { id: '15', keyword: '강남구', type: 'popular' },
+];
+
+// 검색 결과용 목업 데이터
+export const searchResults: SearchResult[] = [
+  // 장소
+  { id: 'place1', title: '도교먹 배재로', subtitle: '서울특별시 서초구', category: '음식점', type: 'place' },
+  { id: 'place2', title: '도교먹 강남점', subtitle: '서울특별시 강남구', category: '음식점', type: 'place' },
+  { id: 'place3', title: '도교먹 홍대점', subtitle: '서울특별시 마포구', category: '음식점', type: 'place' },
+  { id: 'place4', title: '도교먹 이태원점', subtitle: '서울특별시 용산구', category: '음식점', type: 'place' },
+  { id: 'place5', title: '도교먹 명동점', subtitle: '서울특별시 중구', category: '음식점', type: 'place' },
+  
+  // 행사
+  { id: 'event1', title: '봄맞이 꽃 축제', subtitle: '서울특별시 서초구', category: '축제', type: 'event' },
+  { id: 'event2', title: '봄맞이 꽃 축제', subtitle: '서울특별시 강남구', category: '축제', type: 'event' },
+  { id: 'event3', title: '봄맞이 꽃 축제', subtitle: '서울특별시 마포구', category: '축제', type: 'event' },
+  { id: 'event4', title: '봄맞이 꽃 축제', subtitle: '서울특별시 용산구', category: '축제', type: 'event' },
+  { id: 'event5', title: '봄맞이 꽃 축제', subtitle: '서울특별시 중구', category: '축제', type: 'event' },
+  
+  // 기타 장소들
+  { id: 'place6', title: '한강공원', subtitle: '서울특별시 영등포구', category: '공원', type: 'place' },
+  { id: 'place7', title: '남산타워', subtitle: '서울특별시 용산구', category: '관광지', type: 'place' },
+  { id: 'place8', title: '홍대거리', subtitle: '서울특별시 마포구', category: '문화시설', type: 'place' },
+  { id: 'place9', title: '강남역', subtitle: '서울특별시 강남구', category: '교통시설', type: 'place' },
+  { id: 'place10', title: '이태원', subtitle: '서울특별시 용산구', category: '문화시설', type: 'place' },
+  { id: 'place11', title: '명동', subtitle: '서울특별시 중구', category: '상업시설', type: 'place' },
+  { id: 'place12', title: '동대문', subtitle: '서울특별시 중구', category: '상업시설', type: 'place' },
+  { id: 'place13', title: '잠실', subtitle: '서울특별시 송파구', category: '상업시설', type: 'place' },
+  { id: 'place14', title: '올림픽공원', subtitle: '서울특별시 송파구', category: '공원', type: 'place' },
+  { id: 'place15', title: '여의도', subtitle: '서울특별시 영등포구', category: '상업시설', type: 'place' },
 ];
