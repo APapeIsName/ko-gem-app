@@ -2,38 +2,30 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { TitleHeader } from '@/components/common';
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, Dimensions } from 'react-native';
 
 export default function SettingsScreen() {
+  const { height } = Dimensions.get('window');
+  const profileHeight = height * 0.33; // 화면 높이의 1/3
+
   return (
     <ThemedView style={styles.container}>
       <TitleHeader title="설정" />
       
+      {/* 프로필 섹션 */}
+      <ThemedView style={[styles.profileSection, { height: profileHeight }]}>
+        <ThemedText style={styles.profileText}>프로필</ThemedText>
+      </ThemedView>
+      
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>
           <ThemedView style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>계정</ThemedText>
-            <ThemedView style={styles.menuItem}>
-              <ThemedText>프로필 편집</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.menuItem}>
-              <ThemedText>알림 설정</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.menuItem}>
-              <ThemedText>개인정보 보호</ThemedText>
-            </ThemedView>
-          </ThemedView>
-          
-          <ThemedView style={styles.section}>
             <ThemedText style={styles.sectionTitle}>앱</ThemedText>
             <ThemedView style={styles.menuItem}>
-              <ThemedText>언어 설정</ThemedText>
+              <ThemedText style={styles.menuText}>언어 설정</ThemedText>
             </ThemedView>
             <ThemedView style={styles.menuItem}>
-              <ThemedText>테마 설정</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.menuItem}>
-              <ThemedText>버전 정보</ThemedText>
+              <ThemedText style={styles.menuText}>알림 설정</ThemedText>
             </ThemedView>
           </ThemedView>
         </ThemedView>
@@ -46,6 +38,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  profileSection: {
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  profileText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#374151',
   },
   scrollView: {
     flex: 1,
@@ -67,5 +71,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#374151',
   },
 });
