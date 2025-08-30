@@ -1,4 +1,4 @@
-package com.anonymous.kogem
+package com.apape.kogem
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -30,6 +30,10 @@ export default function HomeScreen() {
     router.push('/search');
   };
 
+  const handleMapPress = () => {
+    router.push('/map');
+  };
+
   const handleItemPress = (item: any) => {
     console.log('아이템 선택:', item.title);
     
@@ -81,7 +85,7 @@ export default function HomeScreen() {
       <LocationHeader 
         location={placeCity}
         onLocationPress={() => console.log('위치 선택')}
-        onMapPress={() => console.log('지도 열기')}
+        onMapPress={handleMapPress}
         onLocationChange={handleLocationChange}
         useSafeArea={true}
       />
@@ -99,6 +103,12 @@ export default function HomeScreen() {
               <ThemedText style={styles.searchPlaceholder}>장소, 키워드로 검색해보세요</ThemedText>
             </TouchableOpacity>
           </ThemedView>
+
+          {/* AsyncStorage 테스트 섹션 */}
+          {/* <ThemedView style={styles.testSection}>
+            <ThemedText style={styles.testSectionTitle}>AsyncStorage 테스트</ThemedText>
+            <AsyncStorageTest />
+          </ThemedView> */}
 
           {/* 홈 메인 컨텐츠 */}
           {homeSections.map((section) => (
@@ -146,6 +156,21 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     marginLeft: 10,
     color: '#687076',
+  },
+  testSection: {
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  testSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#495057',
+    textAlign: 'center',
   },
   bottomSpacer: {
     height: 80, // 바텀 내비게이션 바의 높이에 맞춰 여백 추가

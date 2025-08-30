@@ -46,7 +46,7 @@ apiClient.interceptors.response.use(
 
 // 토큰 가져오기 (임시 구현)
 function getAuthToken(): string | null {
-  // MMKV나 AsyncStorage에서 토큰 가져오기
+      // AsyncStorage에서 토큰 가져오기
   return null;
 }
 
