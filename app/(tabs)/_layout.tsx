@@ -42,9 +42,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="mypage"
         options={{
-          title: '설정',
+          title: '마이 페이지',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name={NAVIGATION_ICONS.SETTINGS} color={color} />,
         }}
       />
