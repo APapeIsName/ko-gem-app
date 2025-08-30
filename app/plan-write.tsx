@@ -3,7 +3,6 @@ import TimePicker from '@/components/common/TimePicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { PLAN_DEFAULTS } from '@/data/constants/plans';
 import { useCreatePlan } from '@/hooks/api/usePlans';
 import { PlanFormData } from '@/types/plan/type';
 import { formatDate } from '@/utils/helpers';
@@ -39,12 +38,10 @@ export default function PlanWriteScreen() {
   const [formData, setFormData] = useState<PlanFormData>({
     title: '',
     description: '',
-    category: PLAN_DEFAULTS.category,
-    priority: PLAN_DEFAULTS.priority,
     startDate: date as string || getKoreanDate(),
     endDate: date as string || getKoreanDate(),
-    startTime: PLAN_DEFAULTS.startTime,
-    endTime: PLAN_DEFAULTS.endTime,
+    startTime: '09:00', // 기본값을 true로 설정
+    endTime: '10:00', // 기본값을 true로 설정
     allDay: true, // 기본값을 true로 설정
     location: '',
     tags: [],
@@ -212,57 +209,15 @@ export default function PlanWriteScreen() {
             />
           </ThemedView>
 
-          {/* 태그 입력 */}
+          {/* 장소 입력 */}
           <ThemedView style={styles.inputSection}>
-            <ThemedText style={styles.inputLabel}>태그</ThemedText>
-            <View style={styles.tagInputContainer}>
-              <TextInput
-                style={styles.tagInput}
-                placeholder="태그를 입력하고 + 버튼을 누르세요"
-                placeholderTextColor="#9CA3AF"
-                value={tagInput}
-                onChangeText={setTagInput}
-                onSubmitEditing={handleAddTag}
-              />
-              <TouchableOpacity
-                style={styles.addTagButton}
-                onPress={handleAddTag}
-                activeOpacity={0.7}
-              >
-                <IconSymbol name="add" size={20} color="#10B981" />
-              </TouchableOpacity>
-            </View>
-            {formData.tags && formData.tags.length > 0 && (
-              <View style={styles.tagList}>
-                {formData.tags.map((tag, index) => (
-                  <View key={index} style={styles.tagItem}>
-                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
-                    <TouchableOpacity
-                      style={styles.removeTagButton}
-                      onPress={() => handleRemoveTag(index)}
-                      activeOpacity={0.7}
-                    >
-                      <IconSymbol name="close" size={16} color="#6B7280" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
-          </ThemedView>
-
-          {/* 설명 입력 */}
-          <ThemedView style={styles.inputSection}>
-            <ThemedText style={styles.inputLabel}>설명</ThemedText>
+            <ThemedText style={styles.inputLabel}>장소</ThemedText>
             <TextInput
-              style={[styles.textInput, styles.textArea]}
-              placeholder="계획에 대한 설명을 입력하세요"
+              style={styles.textInput}
+              placeholder="예: 한강공원"
               placeholderTextColor="#9CA3AF"
-              value={formData.description}
-              onChangeText={(text) => setFormData({ ...formData, description: text })}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              maxLength={1000}
+              value={formData.location}
+              onChangeText={(text) => setFormData({ ...formData, location: text })}
             />
           </ThemedView>
 
@@ -349,15 +304,57 @@ export default function PlanWriteScreen() {
             </ThemedView>
           )}
 
-          {/* 장소 입력 */}
+          {/* 태그 입력 */}
           <ThemedView style={styles.inputSection}>
-            <ThemedText style={styles.inputLabel}>장소</ThemedText>
+            <ThemedText style={styles.inputLabel}>태그</ThemedText>
+            <View style={styles.tagInputContainer}>
+              <TextInput
+                style={styles.tagInput}
+                placeholder="태그를 입력하고 + 버튼을 누르세요"
+                placeholderTextColor="#9CA3AF"
+                value={tagInput}
+                onChangeText={setTagInput}
+                onSubmitEditing={handleAddTag}
+              />
+              <TouchableOpacity
+                style={styles.addTagButton}
+                onPress={handleAddTag}
+                activeOpacity={0.7}
+              >
+                <IconSymbol name="add" size={20} color="#10B981" />
+              </TouchableOpacity>
+            </View>
+            {formData.tags && formData.tags.length > 0 && (
+              <View style={styles.tagList}>
+                {formData.tags.map((tag, index) => (
+                  <View key={index} style={styles.tagItem}>
+                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                    <TouchableOpacity
+                      style={styles.removeTagButton}
+                      onPress={() => handleRemoveTag(index)}
+                      activeOpacity={0.7}
+                    >
+                      <IconSymbol name="close" size={16} color="#6B7280" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+          </ThemedView>
+
+          {/* 설명 입력 */}
+          <ThemedView style={styles.inputSection}>
+            <ThemedText style={styles.inputLabel}>설명</ThemedText>
             <TextInput
-              style={styles.textInput}
-              placeholder="예: 한강공원"
+              style={[styles.textInput, styles.textArea]}
+              placeholder="계획에 대한 설명을 입력하세요"
               placeholderTextColor="#9CA3AF"
-              value={formData.location}
-              onChangeText={(text) => setFormData({ ...formData, location: text })}
+              value={formData.description}
+              onChangeText={(text) => setFormData({ ...formData, description: text })}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              maxLength={1000}
             />
           </ThemedView>
         </ThemedView>

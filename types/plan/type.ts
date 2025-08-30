@@ -7,26 +7,6 @@ export enum PlanStatus {
   ARCHIVED = 'archived',     // 보관
 }
 
-// 계획 우선순위 열거형
-export enum PlanPriority {
-  LOW = 'low',           // 낮음
-  MEDIUM = 'medium',     // 보통
-  HIGH = 'high',         // 높음
-  URGENT = 'urgent',     // 긴급
-}
-
-// 계획 카테고리 열거형
-export enum PlanCategory {
-  TRAVEL = 'travel',         // 여행
-  WORK = 'work',            // 업무
-  PERSONAL = 'personal',     // 개인
-  HEALTH = 'health',        // 건강
-  STUDY = 'study',          // 학습
-  SHOPPING = 'shopping',    // 쇼핑
-  ENTERTAINMENT = 'entertainment', // 엔터테인먼트
-  OTHER = 'other',          // 기타
-}
-
 // 계획 반복 타입 열거형
 export enum PlanRepeatType {
   NONE = 'none',         // 반복 없음
@@ -53,14 +33,6 @@ export interface PlanNotification {
   time: string;               // ISO 8601 형식
   offset?: number;            // 알림 시간 오프셋 (분)
   enabled: boolean;
-}
-
-// 계획 태그
-export interface PlanTag {
-  id: string;
-  name: string;
-  color: string;
-  createdAt: string;
 }
 
 // 계획 첨부파일
@@ -90,9 +62,7 @@ export interface Plan {
   id: string;
   title: string;
   description?: string;
-  category: PlanCategory;
   status: PlanStatus;
-  priority: PlanPriority;
   
   // 시간 관련
   startDate: string;          // ISO 8601 형식
@@ -112,7 +82,7 @@ export interface Plan {
   notifications: PlanNotification[];
   
   // 추가 정보
-  tags: PlanTag[];
+  tags: string[];             // 단순한 문자열 배열로 변경
   attachments: PlanAttachment[];
   notes?: string;
   
@@ -124,8 +94,6 @@ export interface Plan {
 export interface PlanFormData {
   title: string;
   description?: string;
-  category: PlanCategory;
-  priority: PlanPriority;
   startDate: string;
   endDate?: string;
   startTime?: string;
@@ -145,8 +113,6 @@ export interface PlanUpdateData extends Partial<PlanFormData> {
 // 계획 필터 옵션
 export interface PlanFilterOptions {
   status?: PlanStatus[];
-  category?: PlanCategory[];
-  priority?: PlanPriority[];
   dateRange?: {
     start: string;
     end: string;
@@ -157,7 +123,7 @@ export interface PlanFilterOptions {
 
 // 계획 정렬 옵션
 export interface PlanSortOptions {
-  field: 'title' | 'startDate' | 'priority' | 'createdAt' | 'updatedAt';
+  field: 'title' | 'startDate' | 'createdAt' | 'updatedAt';
   direction: 'asc' | 'desc';
 }
 
@@ -165,8 +131,6 @@ export interface PlanSortOptions {
 export interface PlanStats {
   total: number;
   byStatus: Record<PlanStatus, number>;
-  byCategory: Record<PlanCategory, number>;
-  byPriority: Record<PlanPriority, number>;
   upcoming: number;
   overdue: number;
   completed: number;

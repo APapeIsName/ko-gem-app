@@ -1,10 +1,8 @@
 import { loadFromStorage, loadPlansBatch, savePlansBatch, STORAGE_KEYS, storageService } from '@/services/storage/asyncStorage';
 import {
     Plan,
-    PlanCategory,
     PlanFilterOptions,
     PlanFormData,
-    PlanPriority,
     PlanSortOptions,
     PlanStats,
     PlanStatus,
@@ -39,15 +37,8 @@ export class PlanService {
       id: generateId(),
       ...planData,
       status: PlanStatus.ACTIVE,
-      priority: planData.priority || PlanPriority.MEDIUM,
-      category: planData.category || PlanCategory.PERSONAL,
       allDay: planData.allDay || false,
-      tags: planData.tags?.map(tag => ({
-        id: generateId(),
-        name: tag,
-        color: '#3B82F6',
-        createdAt: now,
-      })) || [],
+      tags: planData.tags || [],
       attachments: [],
       notifications: [],
       metadata: {
@@ -188,11 +179,11 @@ export class PlanService {
     return restoredPlan;
   }
 
-  // 계획 통계 조회
+  // 계획 통계
   async getPlanStats(): Promise<PlanStats> {
     const plans = await this.getAllPlans();
     const now = new Date();
-
+    
     const stats: PlanStats = {
       total: plans.length,
       byStatus: {
@@ -202,22 +193,8 @@ export class PlanService {
         [PlanStatus.CANCELLED]: 0,
         [PlanStatus.ARCHIVED]: 0,
       },
-      byCategory: {
-        [PlanCategory.TRAVEL]: 0,
-        [PlanCategory.WORK]: 0,
-        [PlanCategory.PERSONAL]: 0,
-        [PlanCategory.HEALTH]: 0,
-        [PlanCategory.STUDY]: 0,
-        [PlanCategory.SHOPPING]: 0,
-        [PlanCategory.ENTERTAINMENT]: 0,
-        [PlanCategory.OTHER]: 0,
-      },
-      byPriority: {
-        [PlanPriority.LOW]: 0,
-        [PlanPriority.MEDIUM]: 0,
-        [PlanPriority.HIGH]: 0,
-        [PlanPriority.URGENT]: 0,
-      },
+      byCategory: {} as Record<string, number>, // 카테고리 제거
+      byPriority: {} as Record<string, number>, // 우선순위 제거
       upcoming: 0,
       overdue: 0,
       completed: 0,
@@ -227,12 +204,6 @@ export class PlanService {
       // 상태별 카운트
       stats.byStatus[plan.status]++;
       
-      // 카테고리별 카운트
-      stats.byCategory[plan.category]++;
-      
-      // 우선순위별 카운트
-      stats.byPriority[plan.priority]++;
-
       // 시간별 카운트
       if (plan.status === PlanStatus.COMPLETED) {
         stats.completed++;
@@ -257,9 +228,13 @@ export class PlanService {
     console.log('전체 계획 수:', plans.length);
     
     const filteredPlans = plans.filter(plan => {
-      const planDate = plan.startDate.split('T')[0];
-      const matches = planDate === date;
-      console.log(`계획 ${plan.id}: ${planDate} === ${date} = ${matches}`);
+      // 저장된 날짜를 한국 시간대로 변환하여 비교
+      const planDate = new Date(plan.startDate);
+      const koreanDate = new Date(planDate.getTime() + (9 * 60 * 60 * 1000));
+      const planDateString = koreanDate.toISOString().split('T')[0];
+      
+      const matches = planDateString === date;
+      console.log(`계획 ${plan.id}: ${planDateString} === ${date} = ${matches}`);
       return matches;
     });
     
@@ -271,8 +246,12 @@ export class PlanService {
   async getPlansByDateRange(startDate: string, endDate: string): Promise<Plan[]> {
     const plans = await this.getAllPlans();
     return plans.filter(plan => {
-      const planDate = plan.startDate.split('T')[0];
-      return planDate >= startDate && planDate <= endDate;
+      // 저장된 날짜를 한국 시간대로 변환하여 비교
+      const planDate = new Date(plan.startDate);
+      const koreanDate = new Date(planDate.getTime() + (9 * 60 * 60 * 1000));
+      const planDateString = koreanDate.toISOString().split('T')[0];
+      
+      return planDateString >= startDate && planDateString <= endDate;
     });
   }
 
@@ -285,7 +264,7 @@ export class PlanService {
       plan.title.toLowerCase().includes(lowerQuery) ||
       plan.description?.toLowerCase().includes(lowerQuery) ||
       plan.location?.toLowerCase().includes(lowerQuery) ||
-      plan.tags.some(tag => tag.name.toLowerCase().includes(lowerQuery))
+      plan.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
     );
   }
 
@@ -293,7 +272,7 @@ export class PlanService {
   async getPlansByTag(tagName: string): Promise<Plan[]> {
     const plans = await this.getAllPlans();
     return plans.filter(plan => 
-      plan.tags.some(tag => tag.name.toLowerCase() === tagName.toLowerCase())
+      plan.tags.some(tag => tag.toLowerCase() === tagName.toLowerCase())
     );
   }
 
@@ -396,16 +375,6 @@ export class PlanService {
         return false;
       }
 
-      // 카테고리 필터
-      if (filterOptions.category && !filterOptions.category.includes(plan.category)) {
-        return false;
-      }
-
-      // 우선순위 필터
-      if (filterOptions.priority && !filterOptions.priority.includes(plan.priority)) {
-        return false;
-      }
-
       // 날짜 범위 필터
       if (filterOptions.dateRange) {
         const planDate = plan.startDate.split('T')[0];
@@ -417,7 +386,7 @@ export class PlanService {
       // 태그 필터
       if (filterOptions.tags && filterOptions.tags.length > 0) {
         const hasMatchingTag = plan.tags.some(tag => 
-          filterOptions.tags!.includes(tag.name)
+          filterOptions.tags!.includes(tag)
         );
         if (!hasMatchingTag) return false;
       }
@@ -429,7 +398,7 @@ export class PlanService {
           plan.title.toLowerCase().includes(query) ||
           plan.description?.toLowerCase().includes(query) ||
           plan.location?.toLowerCase().includes(query) ||
-          plan.tags.some(tag => tag.name.toLowerCase().includes(query));
+          plan.tags.some(tag => tag.toLowerCase().includes(query));
         
         if (!matches) return false;
       }
@@ -452,11 +421,6 @@ export class PlanService {
         case 'startDate':
           aValue = new Date(a.startDate);
           bValue = new Date(b.startDate);
-          break;
-        case 'priority':
-          const priorityOrder = { [PlanPriority.LOW]: 0, [PlanPriority.MEDIUM]: 1, [PlanPriority.HIGH]: 2, [PlanPriority.URGENT]: 3 };
-          aValue = priorityOrder[a.priority];
-          bValue = priorityOrder[b.priority];
           break;
         case 'createdAt':
           aValue = new Date(a.metadata.createdAt);

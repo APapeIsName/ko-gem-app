@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { planService } from '@/services/plans/planService';
-import { Plan, PlanFormData, PlanUpdateData, PlanFilterOptions, PlanSortOptions } from '@/types/plan/type';
+import { PlanFilterOptions, PlanFormData, PlanSortOptions, PlanUpdateData } from '@/types/plan/type';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Query Keys
 export const planKeys = {
@@ -74,7 +74,15 @@ export function useCreatePlan() {
     onSuccess: (newPlan) => {
       // 관련된 모든 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.byDate(newPlan.startDate.split('T')[0]) });
+      
+      // startDate가 있는 경우에만 날짜별 쿼리 무효화
+      if (newPlan.startDate) {
+        const dateKey = typeof newPlan.startDate === 'string' 
+          ? newPlan.startDate.split('T')[0] 
+          : newPlan.startDate;
+        queryClient.invalidateQueries({ queryKey: planKeys.byDate(dateKey) });
+      }
+      
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
       queryClient.invalidateQueries({ queryKey: planKeys.syncState() });
       
@@ -97,7 +105,15 @@ export function useUpdatePlan() {
     onSuccess: (updatedPlan) => {
       // 관련된 모든 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.byDate(updatedPlan.startDate.split('T')[0]) });
+      
+      // startDate가 있는 경우에만 날짜별 쿼리 무효화
+      if (updatedPlan.startDate) {
+        const dateKey = typeof updatedPlan.startDate === 'string' 
+          ? updatedPlan.startDate.split('T')[0] 
+          : updatedPlan.startDate;
+        queryClient.invalidateQueries({ queryKey: planKeys.byDate(dateKey) });
+      }
+      
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
       queryClient.invalidateQueries({ queryKey: planKeys.syncState() });
       
@@ -119,7 +135,15 @@ export function useDeletePlan() {
     onSuccess: (deletedPlan) => {
       // 관련된 모든 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.byDate(deletedPlan.startDate.split('T')[0]) });
+      
+      // startDate가 있는 경우에만 날짜별 쿼리 무효화
+      if (deletedPlan.startDate) {
+        const dateKey = typeof deletedPlan.startDate === 'string' 
+          ? deletedPlan.startDate.split('T')[0] 
+          : deletedPlan.startDate;
+        queryClient.invalidateQueries({ queryKey: planKeys.byDate(dateKey) });
+      }
+      
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
       queryClient.invalidateQueries({ queryKey: planKeys.syncState() });
       
@@ -141,7 +165,15 @@ export function useCompletePlan() {
     onSuccess: (completedPlan) => {
       // 관련된 모든 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.byDate(completedPlan.startDate.split('T')[0]) });
+      
+      // startDate가 있는 경우에만 날짜별 쿼리 무효화
+      if (completedPlan.startDate) {
+        const dateKey = typeof completedPlan.startDate === 'string' 
+          ? completedPlan.startDate.split('T')[0] 
+          : completedPlan.startDate;
+        queryClient.invalidateQueries({ queryKey: planKeys.byDate(dateKey) });
+      }
+      
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
       queryClient.invalidateQueries({ queryKey: planKeys.syncState() });
       
@@ -163,7 +195,15 @@ export function useCancelPlan() {
     onSuccess: (cancelledPlan) => {
       // 관련된 모든 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.byDate(cancelledPlan.startDate.split('T')[0]) });
+      
+      // startDate가 있는 경우에만 날짜별 쿼리 무효화
+      if (cancelledPlan.startDate) {
+        const dateKey = typeof cancelledPlan.startDate === 'string' 
+          ? cancelledPlan.startDate.split('T')[0] 
+          : cancelledPlan.startDate;
+        queryClient.invalidateQueries({ queryKey: planKeys.byDate(dateKey) });
+      }
+      
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
       queryClient.invalidateQueries({ queryKey: planKeys.syncState() });
       
@@ -185,7 +225,15 @@ export function useRestorePlan() {
     onSuccess: (restoredPlan) => {
       // 관련된 모든 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.byDate(restoredPlan.startDate.split('T')[0]) });
+      
+      // startDate가 있는 경우에만 날짜별 쿼리 무효화
+      if (restoredPlan.startDate) {
+        const dateKey = typeof restoredPlan.startDate === 'string' 
+          ? restoredPlan.startDate.split('T')[0] 
+          : restoredPlan.startDate;
+        queryClient.invalidateQueries({ queryKey: planKeys.byDate(dateKey) });
+      }
+      
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
       queryClient.invalidateQueries({ queryKey: planKeys.syncState() });
       

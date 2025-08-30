@@ -1,22 +1,32 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { PLAN_CATEGORIES, PLAN_PRIORITIES, PLAN_STATUSES } from '@/data/constants/plans';
-import { useCancelPlan, useCompletePlan, usePlansByDate } from '@/hooks/api/usePlans';
+import { useCancelPlan, useCompletePlan, useDeletePlan, usePlansByDate } from '@/hooks/api/usePlans';
 import { Plan, PlanStatus } from '@/types/plan/type';
-import { formatDate, getCurrentDate } from '@/utils/helpers';
+import { formatDate, normalizeTags } from '@/utils/helpers';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function PlanScreen() {
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState(getCurrentDate());
+  
+  // 한국 시간대를 고려한 현재 날짜 가져오기
+  const getKoreanDate = () => {
+    const now = new Date();
+    // 한국 시간대 (UTC+9)로 정확하게 변환
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const koreanTime = new Date(utc + (9 * 60000));
+    return koreanTime.toISOString().split('T')[0];
+  };
+  
+  const [selectedDate, setSelectedDate] = useState(getKoreanDate());
 
   // TanStack Query를 사용하여 계획 데이터 관리
   const { data: plans = [], isLoading, error, refetch } = usePlansByDate(selectedDate);
   const completePlanMutation = useCompletePlan();
   const cancelPlanMutation = useCancelPlan();
+  const deletePlanMutation = useDeletePlan();
 
   const handleAddPlan = () => {
     router.push({
@@ -49,75 +59,124 @@ export default function PlanScreen() {
     }
   };
 
-  const renderPlanItem = ({ item }: { item: Plan }) => (
-    <TouchableOpacity
-      style={styles.planItem}
-      onPress={() => handlePlanPress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.planItemHeader}>
-        <View style={styles.planItemLeft}>
-          <View style={[
-            styles.categoryBadge,
-            { backgroundColor: PLAN_CATEGORIES[item.category].color }
-          ]}>
-            <ThemedText style={styles.categoryText}>
-              {PLAN_CATEGORIES[item.category].name}
-            </ThemedText>
-          </View>
-          <View style={[
-            styles.priorityBadge,
-            { backgroundColor: PLAN_PRIORITIES[item.priority].color }
-          ]}>
-            <ThemedText style={styles.priorityText}>
-              {PLAN_PRIORITIES[item.priority].name}
-            </ThemedText>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={[
-            styles.statusButton,
-            { backgroundColor: PLAN_STATUSES[item.status].color }
-          ]}
-          onPress={() => handleToggleComplete(item.id)}
-        >
-          <IconSymbol 
-            name={item.status === PlanStatus.COMPLETED ? 'check' : 'play-arrow'} 
-            size={16} 
-            color="#fff" 
-          />
-        </TouchableOpacity>
-      </View>
-      
-      <ThemedText style={styles.planTitle} numberOfLines={2}>
-        {item.title}
-      </ThemedText>
-      
-      {item.description && (
-        <ThemedText style={styles.planDescription} numberOfLines={2}>
-          {item.description}
-        </ThemedText>
-      )}
-      
-      <View style={styles.planItemFooter}>
-        <View style={styles.timeInfo}>
-          <IconSymbol name="access-time" size={16} color="#687076" />
-          <ThemedText style={styles.timeText}>
-            {item.allDay ? '하루 종일' : `${item.startTime || '00:00'}`}
-          </ThemedText>
-        </View>
-        
-        {item.location && (
-          <View style={styles.locationInfo}>
-            <IconSymbol name="place" size={16} color="#687076" />
-            <ThemedText style={styles.locationText} numberOfLines={1}>
-              {item.location}
-            </ThemedText>
+  // 모든 계획 삭제 함수
+  const handleDeleteAllPlans = () => {
+    if (plans.length === 0) {
+      Alert.alert('알림', '삭제할 계획이 없습니다.');
+      return;
+    }
+
+    Alert.alert(
+      '경고',
+      `현재 날짜의 모든 계획(${plans.length}개)을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+      [
+        {
+          text: '취소',
+          style: 'cancel',
+        },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // 모든 계획을 순차적으로 삭제
+              for (const plan of plans) {
+                await deletePlanMutation.mutateAsync(plan.id);
+              }
+              Alert.alert('완료', '모든 계획이 삭제되었습니다.');
+            } catch (error) {
+              console.error('Failed to delete all plans:', error);
+              Alert.alert('오류', '계획 삭제 중 오류가 발생했습니다.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderPlanItem = ({ item }: { item: Plan }) => {
+    // 태그 정규화
+    const normalizedTags = normalizeTags(item.tags);
+    
+    // 태그 데이터 디버깅 (임시)
+    // console.log('=== 태그 디버깅 ===');
+    // console.log('계획 ID:', item.id);
+    // console.log('원본 태그:', item.tags);
+    // console.log('원본 태그 타입:', typeof item.tags);
+    // console.log('원본 태그 길이:', item.tags ? item.tags.length : 'undefined');
+    // if (item.tags && Array.isArray(item.tags)) {
+    //   item.tags.forEach((tag, index) => {
+    //     console.log(`태그 ${index}:`, tag, '타입:', typeof tag);
+    //   });
+    // }
+    // console.log('정규화된 태그:', normalizedTags);
+    // console.log('==================');
+    
+    return (
+      <TouchableOpacity
+        style={styles.planItem}
+        onPress={() => handlePlanPress(item)}
+        activeOpacity={0.7}
+      >
+        {/* 태그가 있을 때만 헤더 표시 */}
+        {normalizedTags.length > 0 && (
+          <View style={styles.planItemHeader}>
+            <View style={styles.planItemLeft}>
+              {/* 태그 표시 */}
+              <View style={styles.tagsContainer}>
+                {normalizedTags.slice(0, 3).map((tag, index) => (
+                  <View key={index} style={styles.tagBadge}>
+                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                  </View>
+                ))}
+                {normalizedTags.length > 3 && (
+                  <ThemedText style={styles.moreTagsText}>+{normalizedTags.length - 3}</ThemedText>
+                )}
+              </View>
+            </View>
           </View>
         )}
-      </View>
-    </TouchableOpacity>
-  );
+        
+        <ThemedText style={styles.planTitle} numberOfLines={2}>
+          {item.title}
+        </ThemedText>
+        
+        {/* 태그 데이터 임시 표시 */}
+        {/* <View style={styles.tempTagInfo}>
+          <ThemedText style={styles.tempTagText}>
+            원본 태그: {JSON.stringify(item.tags)}
+          </ThemedText>
+          <ThemedText style={styles.tempTagText}>
+            정규화된 태그: {JSON.stringify(normalizedTags)}
+          </ThemedText>
+        </View> */}
+        
+        {item.description && (
+          <ThemedText style={styles.planDescription} numberOfLines={2}>
+            {item.description}
+          </ThemedText>
+        )}
+        
+        <View style={styles.planItemFooter}>
+          <View style={styles.timeInfo}>
+            <IconSymbol name="access-time" size={16} color="#687076" />
+            <ThemedText style={styles.timeText}>
+              {item.allDay ? '하루 종일' : `${item.startTime || '00:00'} - ${item.endTime || '00:00'}`}
+            </ThemedText>
+          </View>
+          
+          {item.location && (
+            <View style={styles.locationInfo}>
+              <IconSymbol name="place" size={16} color="#687076" />
+              <ThemedText style={styles.locationText} numberOfLines={1}>
+                {item.location}
+              </ThemedText>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -182,12 +241,20 @@ export default function PlanScreen() {
               오류: {error.message}
             </ThemedText>
           )}
-          <TouchableOpacity 
-            style={styles.refreshButton}
-            onPress={() => refetch()}
-          >
-            <ThemedText style={styles.refreshButtonText}>새로고침</ThemedText>
-          </TouchableOpacity>
+          <View style={styles.debugButtonsContainer}>
+            <TouchableOpacity 
+              style={styles.refreshButton}
+              onPress={() => refetch()}
+            >
+              <ThemedText style={styles.refreshButtonText}>새로고침</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.deleteAllButton}
+              onPress={handleDeleteAllPlans}
+            >
+              <ThemedText style={styles.deleteAllButtonText}>데이터 삭제</ThemedText>
+            </TouchableOpacity>
+          </View>
         </ThemedView> */}
       </ThemedView>
 
@@ -262,15 +329,29 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 5,
   },
+  debugButtonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 5,
+  },
   refreshButton: {
     backgroundColor: '#007AFF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    alignSelf: 'flex-start',
-    marginTop: 5,
   },
   refreshButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  deleteAllButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  deleteAllButtonText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
@@ -305,39 +386,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   planItemLeft: {
+    flex: 1,
+  },
+  tagsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexWrap: 'wrap',
+    gap: 4,
+    marginBottom: 4,
   },
-  categoryBadge: {
+  tagBadge: {
+    backgroundColor: '#10B981',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 12,
+    marginRight: 6,
+    marginBottom: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  categoryText: {
-    fontSize: 12,
+  tagText: {
+    fontSize: 11,
     fontWeight: '600',
     color: '#fff',
   },
-  priorityBadge: {
+  moreTagsText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#10B981',
+    backgroundColor: '#D1FAE5',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
-  },
-  priorityText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#fff',
+    borderRadius: 12,
+    marginLeft: 4,
   },
   statusButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
+    padding: 8,
+    borderRadius: 6,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   planTitle: {
     fontSize: 16,
@@ -430,5 +525,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  tempTagInfo: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#E0E7FF',
+    borderRadius: 8,
+  },
+  tempTagText: {
+    fontSize: 12,
+    color: '#4B5563',
+    marginBottom: 4,
   },
 });

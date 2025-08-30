@@ -295,3 +295,52 @@ export function getPasswordStrength(password: string): 'weak' | 'medium' | 'stro
   if (score <= 4) return 'medium';
   return 'strong';
 }
+
+/**
+ * 태그 데이터를 안전하게 처리하여 문자열 배열로 변환
+ * @param tags - 원본 태그 데이터
+ * @returns 정규화된 태그 문자열 배열
+ */
+export function normalizeTags(tags: any): string[] {
+  if (!tags) return [];
+  
+  // 이미 문자열 배열인 경우
+  if (Array.isArray(tags) && tags.every(tag => typeof tag === 'string')) {
+    return tags;
+  }
+  
+  // 배열이지만 문자열이 아닌 요소가 포함된 경우
+  if (Array.isArray(tags)) {
+    return tags
+      .map(tag => {
+        if (typeof tag === 'string') return tag;
+        if (typeof tag === 'object' && tag !== null) {
+          // 객체인 경우 name 속성이 있으면 사용, 없으면 JSON.stringify
+          return tag.name || JSON.stringify(tag);
+        }
+        return String(tag);
+      })
+      .filter(tag => tag && tag.trim().length > 0); // 빈 문자열 제거
+  }
+  
+  // 문자열인 경우 (단일 태그)
+  if (typeof tags === 'string') {
+    return tags.trim() ? [tags.trim()] : [];
+  }
+  
+  // 기타 타입인 경우
+  return [];
+}
+
+/**
+ * 태그를 표시용 텍스트로 변환
+ * @param tag - 태그 데이터
+ * @returns 표시용 태그 텍스트
+ */
+export function formatTag(tag: any): string {
+  if (typeof tag === 'string') return tag;
+  if (typeof tag === 'object' && tag !== null) {
+    return tag.name || JSON.stringify(tag);
+  }
+  return String(tag);
+}
