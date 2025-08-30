@@ -1,3 +1,5 @@
+import DatePicker from '@/components/common/DatePicker';
+import TimePicker from '@/components/common/TimePicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -16,6 +18,12 @@ export default function PlanWriteScreen() {
   // TanStack Query mutation 사용
   const createPlanMutation = useCreatePlan();
   
+  // DatePicker와 TimePicker 상태 관리
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  
   const [formData, setFormData] = useState<PlanFormData>({
     title: '',
     description: '',
@@ -33,6 +41,32 @@ export default function PlanWriteScreen() {
 
   const handleBackPress = () => {
     router.back();
+  };
+
+  // 날짜 선택 핸들러
+  const handleStartDateChange = (selectedDate: Date) => {
+    const dateString = selectedDate.toISOString().split('T')[0];
+    setFormData({ ...formData, startDate: dateString });
+    // 시작 날짜가 변경되면 종료 날짜도 자동으로 업데이트
+    if (formData.endDate && formData.endDate < dateString) {
+      setFormData(prev => ({ ...prev, endDate: dateString }));
+    }
+  };
+
+  const handleEndDateChange = (selectedDate: Date) => {
+    const dateString = selectedDate.toISOString().split('T')[0];
+    setFormData({ ...formData, endDate: dateString });
+  };
+
+  // 시간 선택 핸들러
+  const handleStartTimeChange = (time: { hour: number; minute: number }) => {
+    const timeString = `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`;
+    setFormData({ ...formData, startTime: timeString });
+  };
+
+  const handleEndTimeChange = (time: { hour: number; minute: number }) => {
+    const timeString = `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`;
+    setFormData({ ...formData, endTime: timeString });
   };
 
   const handleSave = async () => {
@@ -94,12 +128,34 @@ export default function PlanWriteScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>
-          {/* 날짜 표시 */}
-          <ThemedView style={styles.dateSection}>
-            <ThemedText style={styles.dateLabel}>날짜</ThemedText>
-            <ThemedText style={styles.dateText}>
-              {formatDate(formData.startDate, 'MM월 DD일')} ({formatDate(formData.startDate, 'relative')})
-            </ThemedText>
+          {/* 날짜 선택 */}
+          <ThemedView style={styles.inputSection}>
+            <ThemedText style={styles.inputLabel}>날짜</ThemedText>
+            <View style={styles.dateRow}>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowStartDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <IconSymbol name="calendar-today" size={20} color="#10B981" />
+                <ThemedText style={styles.dateButtonText}>
+                  {formatDate(formData.startDate, 'MM월 DD일')} ({formatDate(formData.startDate, 'relative')})
+                </ThemedText>
+              </TouchableOpacity>
+              
+              <ThemedText style={styles.dateSeparator}>~</ThemedText>
+              
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowEndDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <IconSymbol name="calendar-today" size={20} color="#10B981" />
+                <ThemedText style={styles.dateButtonText}>
+                  {formatDate(formData.endDate || formData.startDate, 'MM월 DD일')} ({formatDate(formData.endDate || formData.startDate, 'relative')})
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           </ThemedView>
 
           {/* 제목 입력 */}
@@ -206,23 +262,29 @@ export default function PlanWriteScreen() {
                 <View style={styles.timeInputs}>
                   <View style={styles.timeInput}>
                     <ThemedText style={styles.timeLabel}>시작</ThemedText>
-                    <TextInput
-                      style={styles.timeTextInput}
-                      value={formData.startTime}
-                      onChangeText={(text) => setFormData({ ...formData, startTime: text })}
-                      placeholder="09:00"
-                      placeholderTextColor="#9CA3AF"
-                    />
+                    <TouchableOpacity
+                      style={styles.timeButton}
+                      onPress={() => setShowStartTimePicker(true)}
+                      activeOpacity={0.7}
+                    >
+                      <IconSymbol name="access-time" size={20} color="#10B981" />
+                      <ThemedText style={styles.timeButtonText}>
+                        {formData.startTime}
+                      </ThemedText>
+                    </TouchableOpacity>
                   </View>
                   <View style={styles.timeInput}>
                     <ThemedText style={styles.timeLabel}>종료</ThemedText>
-                    <TextInput
-                      style={styles.timeTextInput}
-                      value={formData.endTime}
-                      onChangeText={(text) => setFormData({ ...formData, endTime: text })}
-                      placeholder="10:00"
-                      placeholderTextColor="#9CA3AF"
-                    />
+                    <TouchableOpacity
+                      style={styles.timeButton}
+                      onPress={() => setShowEndTimePicker(true)}
+                      activeOpacity={0.7}
+                    >
+                      <IconSymbol name="access-time" size={20} color="#10B981" />
+                      <ThemedText style={styles.timeButtonText}>
+                        {formData.endTime}
+                      </ThemedText>
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}
@@ -257,6 +319,53 @@ export default function PlanWriteScreen() {
           </ThemedView>
         </ThemedView>
       </ScrollView>
+
+      {/* DateTimePicker 컴포넌트들 */}
+      {/* iOS용 커스텀 모달 */}
+      {/* Android용 기본 DateTimePicker */}
+      {/* DatePicker */}
+      {showStartDatePicker && (
+        <DatePicker
+          visible={showStartDatePicker}
+          onClose={() => setShowStartDatePicker(false)}
+          onConfirm={handleStartDateChange}
+          initialDate={new Date(formData.startDate)}
+        />
+      )}
+
+      {showEndDatePicker && (
+        <DatePicker
+          visible={showEndDatePicker}
+          onClose={() => setShowEndDatePicker(false)}
+          onConfirm={handleEndDateChange}
+          initialDate={new Date(formData.endDate || formData.startDate)}
+        />
+      )}
+
+      {/* TimePicker */}
+      {showStartTimePicker && (
+        <TimePicker
+          visible={showStartTimePicker}
+          onClose={() => setShowStartTimePicker(false)}
+          onConfirm={handleStartTimeChange}
+          initialTime={{ 
+            hour: parseInt(formData.startTime?.split(':')[0] || '9', 10), 
+            minute: parseInt(formData.startTime?.split(':')[1] || '0', 10) 
+          }}
+        />
+      )}
+
+      {showEndTimePicker && (
+        <TimePicker
+          visible={showEndTimePicker}
+          onClose={() => setShowEndTimePicker(false)}
+          onConfirm={handleEndTimeChange}
+          initialTime={{ 
+            hour: parseInt(formData.endTime?.split(':')[0] || '10', 10), 
+            minute: parseInt(formData.endTime?.split(':')[1] || '0', 10) 
+          }}
+        />
+      )}
     </ThemedView>
   );
 }
@@ -307,22 +416,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-  },
-  dateSection: {
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-  },
-  dateLabel: {
-    fontSize: 14,
-    color: '#687076',
-    marginBottom: 4,
-  },
-  dateText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#11181C',
   },
   inputSection: {
     marginBottom: 20,
@@ -441,14 +534,50 @@ const styles = StyleSheet.create({
     color: '#687076',
     marginBottom: 4,
   },
-  timeTextInput: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
+  // 날짜 선택 관련 스타일
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  dateButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 12,
-    fontSize: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 8,
+  },
+  dateButtonText: {
+    fontSize: 14,
     color: '#11181C',
-    backgroundColor: '#fff',
+    fontWeight: '500',
+  },
+  dateSeparator: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  // 시간 선택 관련 스타일
+  timeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 8,
+  },
+  timeButtonText: {
+    fontSize: 14,
+    color: '#11181C',
+    fontWeight: '500',
   },
 });
