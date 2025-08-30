@@ -18,6 +18,15 @@ export default function PlanWriteScreen() {
   // TanStack Query mutation 사용
   const createPlanMutation = useCreatePlan();
   
+  // 한국 시간대를 고려한 현재 날짜 가져오기
+  const getKoreanDate = () => {
+    const now = new Date();
+    // 한국 시간대 (UTC+9)로 정확하게 변환
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const koreanTime = new Date(utc + (9 * 60000));
+    return koreanTime.toISOString().split('T')[0];
+  };
+  
   // DatePicker와 TimePicker 상태 관리
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -29,8 +38,8 @@ export default function PlanWriteScreen() {
     description: '',
     category: PLAN_DEFAULTS.category,
     priority: PLAN_DEFAULTS.priority,
-    startDate: date as string || new Date().toISOString().split('T')[0],
-    endDate: date as string || new Date().toISOString().split('T')[0],
+    startDate: date as string || getKoreanDate(),
+    endDate: date as string || getKoreanDate(),
     startTime: PLAN_DEFAULTS.startTime,
     endTime: PLAN_DEFAULTS.endTime,
     allDay: PLAN_DEFAULTS.allDay,

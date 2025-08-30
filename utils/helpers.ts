@@ -44,7 +44,7 @@ export function formatDate(date: Date | string, format: 'YYYY-MM-DD' | 'MM/DD' |
 function getRelativeDate(date: Date): string {
   const now = new Date();
   const diffTime = now.getTime() - date.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return '오늘';
   if (diffDays === 1) return '어제';

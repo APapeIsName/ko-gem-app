@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import React, { useMemo, useState } from 'react';
+import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface DatePickerProps {
   visible: boolean;
@@ -12,24 +12,40 @@ interface DatePickerProps {
   maxDate?: Date;
 }
 
+// 한국 시간대를 고려한 현재 날짜 가져오기
+const getKoreanDate = () => {
+  const now = new Date();
+  // 한국 시간대 (UTC+9)로 정확하게 변환
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const koreanTime = new Date(utc + (9 * 60000));
+  return new Date(koreanTime.getFullYear(), koreanTime.getMonth(), koreanTime.getDate());
+};
+
+// 한국 시간대를 고려한 날짜 생성
+const createKoreanDate = (year: number, month: number, day: number) => {
+  // UTC 기준으로 날짜를 생성하고 9시간을 더해서 한국 시간대로 조정
+  const utcDate = new Date(Date.UTC(year, month, day, 9, 0, 0));
+  return utcDate;
+};
+
 export default function DatePicker({
   visible,
   onClose,
   onConfirm,
-  initialDate = new Date(),
+  initialDate = getKoreanDate(),
   minDate,
   maxDate,
 }: DatePickerProps) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [currentMonth, setCurrentMonth] = useState(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
 
-  // 현재 월의 첫 번째 날과 마지막 날 계산
+  // 현재 월의 첫 번째 날과 마지막 날 계산 (한국 시간대 고려)
   const firstDayOfMonth = useMemo(() => {
-    return new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    return createKoreanDate(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   }, [currentMonth]);
 
   const lastDayOfMonth = useMemo(() => {
-    return new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    return createKoreanDate(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
   }, [currentMonth]);
 
   // 현재 월의 첫 번째 날이 시작하는 요일 (0: 일요일, 1: 월요일, ...)
@@ -40,17 +56,24 @@ export default function DatePicker({
 
   // 이전 달로 이동
   const goToPreviousMonth = () => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
+      return newMonth;
+    });
   };
 
   // 다음 달로 이동
   const goToNextMonth = () => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
+      return newMonth;
+    });
   };
 
-  // 날짜 선택
+  // 날짜 선택 (한국 시간대 고려)
   const selectDate = (day: number) => {
-    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const newDate = createKoreanDate(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    console.log('newDate', newDate);
     
     // minDate, maxDate 체크
     if (minDate && newDate < minDate) return;
@@ -61,7 +84,7 @@ export default function DatePicker({
 
   // 날짜가 선택 가능한지 확인
   const isDateSelectable = (day: number) => {
-    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const date = createKoreanDate(currentMonth.getFullYear(), currentMonth.getMonth(), day);
     if (minDate && date < minDate) return false;
     if (maxDate && date > maxDate) return false;
     return true;
@@ -76,9 +99,9 @@ export default function DatePicker({
     );
   };
 
-  // 날짜가 오늘인지 확인
+  // 날짜가 오늘인지 확인 (한국 시간대 고려)
   const isToday = (day: number) => {
-    const today = new Date();
+    const today = getKoreanDate();
     return (
       day === today.getDate() &&
       currentMonth.getMonth() === today.getMonth() &&
