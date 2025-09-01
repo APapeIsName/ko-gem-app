@@ -1,4 +1,5 @@
-import { PlaceCity } from '@/store/types/places';
+import { usePlacesStore } from '@/store/slices/placesSlice';
+import { ALL_AREA_CODE, AreaCodeItem } from '@/store/types/places';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from '../../ThemedText';
@@ -6,13 +7,15 @@ import { ThemedView } from '../../ThemedView';
 import { IconSymbol } from '../../ui/IconSymbol';
 
 interface HeaderDropdownProps {
-  selectedCity: PlaceCity;
-  onCitySelect: (city: PlaceCity) => void;
+  selectedAreaCode: AreaCodeItem | null;
+  onAreaSelect: (areaCode: AreaCodeItem) => void;
 }
 
-export function HeaderDropdown({ selectedCity, onCitySelect }: HeaderDropdownProps) {
-  // 도시 목록 (PlaceCity enum에서 가져오기)
-  const cities = Object.values(PlaceCity);
+export function HeaderDropdown({ selectedAreaCode, onAreaSelect }: HeaderDropdownProps) {
+  const { areaCodes } = usePlacesStore();
+  
+  // 전국을 첫 번째로, 그 다음에 API에서 받아온 지역 코드들
+  const allAreas = [ALL_AREA_CODE, ...areaCodes];
 
   return (
     <ThemedView style={styles.container}>
@@ -24,25 +27,25 @@ export function HeaderDropdown({ selectedCity, onCitySelect }: HeaderDropdownPro
         scrollEventThrottle={16}
         onScroll={() => {}}
       >
-        {cities.map((city) => (
+        {allAreas.map((area) => (
           <TouchableOpacity
-            key={city}
+            key={area.code || 'all'}
             style={[
               styles.cityItem,
-              city === selectedCity && styles.selectedCityItem
+              selectedAreaCode?.code === area.code && styles.selectedCityItem
             ]}
-            onPress={() => onCitySelect(city)}
+            onPress={() => onAreaSelect(area)}
             activeOpacity={0.7}
           >
             <ThemedText 
               style={[
                 styles.cityName,
-                city === selectedCity && styles.selectedCityName
+                selectedAreaCode?.code === area.code && styles.selectedCityName
               ]}
             >
-              {city.toString()}
+              {area.name}
             </ThemedText>
-            {city === selectedCity && (
+            {selectedAreaCode?.code === area.code && (
               <IconSymbol name="check" size={20} color="#0a7ea4" />
             )}
           </TouchableOpacity>

@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>kogem</string>
-          <string>com.anonymous.kogem</string>
+          <string>com.apape.kogem</string>
         </array>
       </dict>
     </array>

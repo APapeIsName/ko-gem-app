@@ -1,4 +1,4 @@
-import { placesApi, PlaceSearchParams } from '@/services/api';
+import { ApiParams, placesApi, PlaceSearchParams } from '@/services/api';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 // 추천 장소 조회 훅
@@ -52,9 +52,15 @@ export const usePlacesSearch = (params: PlaceSearchParams) => {
 
 // 카테고리별 장소 조회 훅
 export const usePlacesByCategory = (category: string, params: Omit<PlaceSearchParams, 'category'>) => {
+  const apiParams: ApiParams = {
+    page: 1,
+    limit: 10,
+    ...params,
+  };
+  
   return useQuery({
-    queryKey: ['places', 'category', category, params],
-    queryFn: () => placesApi.getPlacesByCategory(category, params),
+    queryKey: ['places', 'category', category, apiParams],
+    queryFn: () => placesApi.getPlacesByCategory(category, apiParams),
     enabled: !!category,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -68,9 +74,15 @@ export const usePlacesNearby = (
   radius: number = 5,
   params: Omit<PlaceSearchParams, 'location'>
 ) => {
+  const apiParams: ApiParams = {
+    page: 1,
+    limit: 10,
+    ...params,
+  };
+  
   return useQuery({
-    queryKey: ['places', 'nearby', latitude, longitude, radius, params],
-    queryFn: () => placesApi.searchPlacesNearby(latitude, longitude, radius, params),
+    queryKey: ['places', 'nearby', latitude, longitude, radius, apiParams],
+    queryFn: () => placesApi.searchPlacesNearby(latitude, longitude, radius, apiParams),
     enabled: !!latitude && !!longitude,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,

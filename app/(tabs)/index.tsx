@@ -5,29 +5,290 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { NAVIGATION_ICONS } from '@/data';
-import { homeSections } from '@/data/mock/places';
+import { getAreaCodes, getTouristSpots, TOURISM_CONTENT_TYPES } from '@/services/api/tourism';
 import { usePlacesStore } from '@/store/slices/placesSlice';
-import { PlaceCity } from '@/store/types/places';
+import { ALL_AREA_CODE, AreaCodeItem } from '@/store/types/places';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
-  const { placeCity, setPlaceCity } = usePlacesStore();
+  const { 
+    areaCodes, 
+    setAreaCodes, 
+    selectedAreaCode, 
+    setSelectedAreaCode 
+  } = usePlacesStore();
   const router = useRouter();
+  
+  // 행사 데이터 상태
+  const [festivalEvents, setFestivalEvents] = useState<any[]>([]);
+  const [travelCourses, setTravelCourses] = useState<any[]>([]);
+  const [culturalFacilities, setCulturalFacilities] = useState<any[]>([]);
+  const [hiddenSpots, setHiddenSpots] = useState<any[]>([]);
 
   useEffect(() => {
-    setPlaceCity(PlaceCity.ALL);
+    // 기본값으로 전국 설정
+    setSelectedAreaCode(ALL_AREA_CODE);
+    
+    // 지역 코드 API 호출
+    const fetchAreaCodes = async () => {
+      try {
+        const codes = await getAreaCodes(20, 1);
+        setAreaCodes(codes);
+        console.log('지역 코드 로드 완료:', codes);
+      } catch (error) {
+        console.error('지역 코드 로드 실패:', error);
+      }
+    };
+
+    fetchAreaCodes();
   }, []);
 
-  const handleLocationChange = (city: PlaceCity) => {
-    setPlaceCity(city);
-    console.log('선택된 도시:', city.toString());
-    // TODO: 선택된 도시에 따라 데이터 새로고침
+  // 선택된 지역이 변경될 때마다 행사 데이터 새로고침
+  useEffect(() => {
+    if (!selectedAreaCode) return;
+
+    const fetchFestivalEvents = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('행사 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.FESTIVAL_EVENT,
+          arrange: 'D' // 생성일 순으로 정렬
+        });
+
+        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 1000, 1, 'D');
+        console.log('행사 데이터 로드 완료:', events.length, '개');
+        
+        // 1개월 이내와 3개월 이내 날짜 계산
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        
+        // 1개월 이내 행사 (생성일 순으로 정렬된 상태 유지)
+        const oneMonthEvents = events.filter((event: any) => {
+          if (!event.createdtime) return false;
+          
+          const year = parseInt(event.createdtime.substring(0, 4));
+          const month = parseInt(event.createdtime.substring(4, 6)) - 1;
+          const day = parseInt(event.createdtime.substring(6, 8));
+          const hour = parseInt(event.createdtime.substring(8, 10));
+          const minute = parseInt(event.createdtime.substring(10, 12));
+          const second = parseInt(event.createdtime.substring(12, 14));
+          
+          const eventDate = new Date(year, month, day, hour, minute, second);
+          
+          return eventDate >= oneMonthAgo;
+        });
+        
+        // 1개월~3개월 이내 행사 (랜덤 선택)
+        const oneToThreeMonthsEvents = events.filter((event: any) => {
+          if (!event.createdtime) return false;
+          
+          const year = parseInt(event.createdtime.substring(0, 4));
+          const month = parseInt(event.createdtime.substring(4, 6)) - 1;
+          const day = parseInt(event.createdtime.substring(6, 8));
+          const hour = parseInt(event.createdtime.substring(8, 10));
+          const minute = parseInt(event.createdtime.substring(10, 12));
+          const second = parseInt(event.createdtime.substring(12, 14));
+          
+          const eventDate = new Date(year, month, day, hour, minute, second);
+          
+          return eventDate >= threeMonthsAgo && eventDate < oneMonthAgo;
+        });
+        
+        console.log('1개월 이내 행사:', oneMonthEvents.length, '개');
+        console.log('1개월~3개월 이내 행사:', oneToThreeMonthsEvents.length, '개');
+        
+        // 1개월 이내 행사는 그대로 사용 (이미 생성일 순으로 정렬됨)
+        // 1개월~3개월 이내 행사는 랜덤 선택
+        const randomOneToThreeMonthsEvents = getRandomItems(oneToThreeMonthsEvents, 5);
+        
+        // 최종 결과: 1개월 이내 행사 + 랜덤 선택된 1개월~3개월 이내 행사
+        const finalEvents = [...oneMonthEvents, ...randomOneToThreeMonthsEvents];
+        
+        console.log('최종 선택된 행사:', finalEvents.length, '개');
+        
+        setFestivalEvents(finalEvents);
+      } catch (error) {
+        console.error('행사 데이터 로드 실패:', error);
+      }
+    };
+
+    const fetchTravelCourses = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('여행 코스 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.TRAVEL_COURSE
+        });
+
+        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 1000, 1);
+        console.log('여행 코스 데이터 로드 완료:', courses.length, '개');
+        
+        // 완전히 랜덤하게 8개 선택
+        const randomCourses = getRandomItems(courses, 8);
+        console.log('랜덤 선택된 여행 코스:', randomCourses.length, '개');
+        
+        setTravelCourses(randomCourses);
+      } catch (error) {
+        console.error('여행 코스 데이터 로드 실패:', error);
+      }
+    };
+
+    const fetchCulturalFacilities = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('문화시설 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.CULTURAL_FACILITY
+        });
+
+        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 1000, 1);
+        console.log('문화시설 데이터 로드 완료:', facilities.length, '개');
+        
+        // 완전히 랜덤하게 6개 선택
+        const randomFacilities = getRandomItems(facilities, 6);
+        console.log('랜덤 선택된 문화시설:', randomFacilities.length, '개');
+        
+        setCulturalFacilities(randomFacilities);
+      } catch (error) {
+        console.error('문화시설 데이터 로드 실패:', error);
+      }
+    };
+
+    const fetchHiddenSpots = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('숨겨진 관광명소 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.TOURIST_SPOT
+        });
+
+        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 1000, 1);
+        console.log('숨겨진 관광명소 데이터 로드 완료:', spots.length, '개');
+        
+        // 완전히 랜덤하게 7개 선택
+        const randomSpots = getRandomItems(spots, 7);
+        console.log('랜덤 선택된 숨겨진 관광명소:', randomSpots.length, '개');
+        
+        setHiddenSpots(randomSpots);
+      } catch (error) {
+        console.error('숨겨진 관광명소 데이터 로드 실패:', error);
+      }
+    };
+
+    fetchFestivalEvents();
+    fetchTravelCourses();
+    fetchCulturalFacilities();
+    fetchHiddenSpots();
+  }, [selectedAreaCode]);
+
+  // 배열에서 랜덤하게 n개 선택하는 함수
+  const getRandomItems = (array: any[], n: number): any[] => {
+    const shuffled = [...array].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, n);
+  };
+
+  // API 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertToImageCardFormat = (event: any) => ({
+    id: event.contentId,
+    title: event.title,
+    subtitle: event.addr1,
+    image: event.firstimage || event.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: event.title,
+    category: '축제공연행사',
+    rating: 4.5, // 기본값
+    reviewCount: Math.floor(Math.random() * 100) + 10, // 랜덤 리뷰 수
+    isRecommended: Math.random() > 0.5, // 랜덤 추천 여부
+    location: event.addr1,
+    // 추가 정보
+    address: event.addr1,
+    tel: event.tel,
+    mapX: event.mapX,
+    mapY: event.mapY,
+  });
+
+  // 여행 코스 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertTravelCourseToImageCardFormat = (course: any) => ({
+    id: course.contentId,
+    title: course.title,
+    subtitle: course.addr1,
+    image: course.firstimage || course.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: course.title,
+    category: '여행코스',
+    rating: 4.3, // 기본값
+    reviewCount: Math.floor(Math.random() * 200) + 20, // 랜덤 리뷰 수
+    isRecommended: Math.random() > 0.3, // 랜덤 추천 여부 (여행 코스는 추천 확률 높게)
+    location: course.addr1,
+    // 추가 정보
+    address: course.addr1,
+    tel: course.tel,
+    mapX: course.mapX,
+    mapY: course.mapY,
+  });
+
+  // 문화시설 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertCulturalFacilityToImageCardFormat = (facility: any) => ({
+    id: facility.contentId,
+    title: facility.title,
+    subtitle: facility.addr1,
+    image: facility.firstimage || facility.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: facility.title,
+    category: '문화시설',
+    rating: 4.4, // 기본값
+    reviewCount: Math.floor(Math.random() * 150) + 15, // 랜덤 리뷰 수
+    isRecommended: Math.random() > 0.4, // 랜덤 추천 여부
+    location: facility.addr1,
+    // 추가 정보
+    address: facility.addr1,
+    tel: facility.tel,
+    mapX: facility.mapX,
+    mapY: facility.mapY,
+  });
+
+  // 숨겨진 관광명소 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertHiddenSpotToImageCardFormat = (spot: any) => ({
+    id: spot.contentId,
+    title: spot.title,
+    subtitle: spot.addr1,
+    image: spot.firstimage || spot.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: spot.title,
+    category: '관광지',
+    rating: 4.6, // 기본값 (숨겨진 명소는 평점이 높을 것)
+    reviewCount: Math.floor(Math.random() * 100) + 5, // 랜덤 리뷰 수 (적은 리뷰로 숨겨진 느낌)
+    isRecommended: Math.random() > 0.2, // 랜덤 추천 여부 (숨겨진 명소는 추천 확률 높게)
+    location: spot.addr1,
+    // 추가 정보
+    address: spot.addr1,
+    tel: spot.tel,
+    mapX: spot.mapX,
+    mapY: spot.mapY,
+  });
+
+  const handleAreaSelect = (areaCode: AreaCodeItem) => {
+    setSelectedAreaCode(areaCode);
+    console.log('선택된 지역:', areaCode.name, areaCode.code);
+    // TODO: 선택된 지역에 따라 데이터 새로고침
   };
 
   const handleSearchPress = () => {
     router.push('/search');
+  };
+
+  const handleMapPress = () => {
+    router.push('/map');
   };
 
   const handleItemPress = (item: any) => {
@@ -79,10 +340,10 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <LocationHeader 
-        location={placeCity}
+        selectedAreaCode={selectedAreaCode}
         onLocationPress={() => console.log('위치 선택')}
-        onMapPress={() => console.log('지도 열기')}
-        onLocationChange={handleLocationChange}
+        onMapPress={handleMapPress}
+        onAreaSelect={handleAreaSelect}
         useSafeArea={true}
       />
       
@@ -100,15 +361,61 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </ThemedView>
 
-          {/* 홈 메인 컨텐츠 */}
-          {homeSections.map((section) => (
+          {/* 요즘 뜨는 행사 섹션 */}
+          {festivalEvents.length > 0 && (
             <HorizontalScrollSection
-              key={section.id}
-              section={section}
+              section={{
+                id: 'trending-events',
+                title: '요즘 뜨는 행사',
+                type: 'horizontal-scroll',
+                items: festivalEvents.map(convertToImageCardFormat),
+              }}
               renderItem={renderImageCard}
-              onMorePress={() => handleMorePress(section.id)}
+              onMorePress={() => handleMorePress('trending-events')}
             />
-          ))}
+          )}
+
+          {/* 여행 코스 추천 섹션 */}
+          {travelCourses.length > 0 && (
+            <HorizontalScrollSection
+              section={{
+                id: 'travel-courses',
+                title: '여행 코스 추천',
+                type: 'horizontal-scroll',
+                items: travelCourses.map(convertTravelCourseToImageCardFormat),
+              }}
+              renderItem={renderImageCard}
+              onMorePress={() => handleMorePress('travel-courses')}
+            />
+          )}
+
+          {/* 요즘 핫한 플레이스 섹션 */}
+          {culturalFacilities.length > 0 && (
+            <HorizontalScrollSection
+              section={{
+                id: 'hot-places',
+                title: '요즘 핫한 플레이스',
+                type: 'horizontal-scroll',
+                items: culturalFacilities.map(convertCulturalFacilityToImageCardFormat),
+              }}
+              renderItem={renderImageCard}
+              onMorePress={() => handleMorePress('hot-places')}
+            />
+          )}
+
+          {/* 숨겨진 관광명소 섹션 */}
+          {hiddenSpots.length > 0 && (
+            <HorizontalScrollSection
+              section={{
+                id: 'hidden-spots',
+                title: '숨겨진 관광명소',
+                type: 'horizontal-scroll',
+                items: hiddenSpots.map(convertHiddenSpotToImageCardFormat),
+              }}
+              renderItem={renderImageCard}
+              onMorePress={() => handleMorePress('hidden-spots')}
+            />
+          )}
 
           {/* 바텀 내비게이션 바를 위한 여백 */}
           <ThemedView style={styles.bottomSpacer} />
@@ -146,6 +453,21 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     marginLeft: 10,
     color: '#687076',
+  },
+  testSection: {
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  testSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#495057',
+    textAlign: 'center',
   },
   bottomSpacer: {
     height: 80, // 바텀 내비게이션 바의 높이에 맞춰 여백 추가

@@ -1,4 +1,4 @@
-package com.anonymous.kogem
+package com.apape.kogem
 
 import android.app.Application
 import android.content.res.Configuration

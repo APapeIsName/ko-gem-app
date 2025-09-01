@@ -8,4 +8,5 @@ export * from './types/places';
 export * from './constants/categories';
 export * from './constants/icons';
 export * from './constants/regions';
+export * from './constants/plans';
 
