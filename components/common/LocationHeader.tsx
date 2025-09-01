@@ -1,5 +1,5 @@
 import { LOCATION_ICONS, UI_ICONS } from '@/data';
-import { PlaceCity } from '@/store/types/places';
+import { ALL_AREA_CODE, AreaCodeItem } from '@/store/types/places';
 import React, { useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { HeaderDropdown } from '../home/list/HeaderDropdown';
@@ -15,10 +15,10 @@ import { Header } from './Header';
 // }
 
 interface LocationHeaderProps {
-  location?: PlaceCity;
+  selectedAreaCode?: AreaCodeItem | null;
   onLocationPress?: () => void;
   onMapPress?: () => void;
-  onLocationChange?: (city: PlaceCity) => void;
+  onAreaSelect?: (areaCode: AreaCodeItem) => void;
   useSafeArea?: boolean;
 }
 
@@ -27,10 +27,10 @@ interface LocationHeaderProps {
  * Header 컴포넌트의 leftComponent와 rightComponent를 사용하여 구현합니다.
  */
 export function LocationHeader({ 
-  location = PlaceCity.ALL, 
+  selectedAreaCode = ALL_AREA_CODE, 
   onLocationPress, 
   onMapPress,
-  onLocationChange,
+  onAreaSelect,
   useSafeArea = true
 }: LocationHeaderProps) {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -121,11 +121,11 @@ export function LocationHeader({
     }
   };
 
-  const handleCitySelect = (city: PlaceCity) => {
-    if (onLocationChange) {
-      onLocationChange(city);
+  const handleAreaSelect = (areaCode: AreaCodeItem) => {
+    if (onAreaSelect) {
+      onAreaSelect(areaCode);
     }
-    // 도시 선택 시 드롭다운을 숨기는 애니메이션
+    // 지역 선택 시 드롭다운을 숨기는 애니메이션
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -159,7 +159,7 @@ export function LocationHeader({
         activeOpacity={0.7}
       >
         <IconSymbol name={LOCATION_ICONS.LOCATION_ON} size={20} color="#687076" />
-        <ThemedText style={styles.locationText}>{location.toString()}</ThemedText>
+        <ThemedText style={styles.locationText}>{selectedAreaCode?.name || '전국'}</ThemedText>
         <IconSymbol 
           name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
           size={18} 
@@ -190,14 +190,14 @@ export function LocationHeader({
         onLayout={onHeaderLayout}
       />
       
-      {/* 도시 선택 드롭다운 */}
+      {/* 지역 선택 드롭다운 */}
       {isDropdownVisible && (
         <Animated.View
           style={[styles.dropdown, dropdownStyle, { top: headerHeight }]} // 👈 zIndex 적용
         >
           <HeaderDropdown
-            selectedCity={location}
-            onCitySelect={handleCitySelect}
+            selectedAreaCode={selectedAreaCode}
+            onAreaSelect={handleAreaSelect}
           />
         </Animated.View>
       )}

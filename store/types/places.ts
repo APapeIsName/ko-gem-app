@@ -1,5 +1,19 @@
 import { CardData } from '@/data';
 
+// API에서 받아온 지역 코드 타입
+export interface AreaCodeItem {
+  rnum: number;
+  code: string;
+  name: string;
+}
+
+// 전국 옵션 (기본값)
+export const ALL_AREA_CODE: AreaCodeItem = {
+  rnum: 0,
+  code: '',
+  name: '전국',
+};
+
 // 장소 상태 타입
 export interface PlacesState {
   /** 추천 장소들 */
@@ -26,6 +40,10 @@ export interface PlacesState {
     longitude: number;
     address: string;
   } | null;
+  /** 지역 코드 목록 */
+  areaCodes: AreaCodeItem[];
+  /** 현재 선택된 지역 */
+  selectedAreaCode: AreaCodeItem | null;
 }
 
 // 장소 검색 파라미터
@@ -39,6 +57,7 @@ export interface PlaceSearchParams {
   offset?: number;
 }
 
+// 기존 PlaceCity enum (하위 호환성을 위해 유지)
 export enum PlaceCity {
   ALL = '전국',
   SEOUL = '서울',
