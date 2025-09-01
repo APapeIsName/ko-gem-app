@@ -24,6 +24,7 @@ export default function HomeScreen() {
   
   // 행사 데이터 상태
   const [festivalEvents, setFestivalEvents] = useState<any[]>([]);
+  const [travelCourses, setTravelCourses] = useState<any[]>([]);
 
   useEffect(() => {
     // 기본값으로 전국 설정
@@ -118,7 +119,31 @@ export default function HomeScreen() {
       }
     };
 
+    const fetchTravelCourses = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('여행 코스 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.TRAVEL_COURSE
+        });
+
+        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 1000, 1);
+        console.log('여행 코스 데이터 로드 완료:', courses.length, '개');
+        
+        // 완전히 랜덤하게 8개 선택
+        const randomCourses = getRandomItems(courses, 8);
+        console.log('랜덤 선택된 여행 코스:', randomCourses.length, '개');
+        
+        setTravelCourses(randomCourses);
+      } catch (error) {
+        console.error('여행 코스 데이터 로드 실패:', error);
+      }
+    };
+
     fetchFestivalEvents();
+    fetchTravelCourses();
   }, [selectedAreaCode]);
 
   // 배열에서 랜덤하게 n개 선택하는 함수
@@ -144,6 +169,25 @@ export default function HomeScreen() {
     tel: event.tel,
     mapX: event.mapX,
     mapY: event.mapY,
+  });
+
+  // 여행 코스 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertTravelCourseToImageCardFormat = (course: any) => ({
+    id: course.contentId,
+    title: course.title,
+    subtitle: course.addr1,
+    image: course.firstimage || course.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: course.title,
+    category: '여행코스',
+    rating: 4.3, // 기본값
+    reviewCount: Math.floor(Math.random() * 200) + 20, // 랜덤 리뷰 수
+    isRecommended: Math.random() > 0.3, // 랜덤 추천 여부 (여행 코스는 추천 확률 높게)
+    location: course.addr1,
+    // 추가 정보
+    address: course.addr1,
+    tel: course.tel,
+    mapX: course.mapX,
+    mapY: course.mapY,
   });
 
   const handleAreaSelect = (areaCode: AreaCodeItem) => {
@@ -241,6 +285,20 @@ export default function HomeScreen() {
               }}
               renderItem={renderImageCard}
               onMorePress={() => handleMorePress('trending-events')}
+            />
+          )}
+
+          {/* 여행 코스 추천 섹션 */}
+          {travelCourses.length > 0 && (
+            <HorizontalScrollSection
+              section={{
+                id: 'travel-courses',
+                title: '여행 코스 추천',
+                type: 'horizontal-scroll',
+                items: travelCourses.map(convertTravelCourseToImageCardFormat),
+              }}
+              renderItem={renderImageCard}
+              onMorePress={() => handleMorePress('travel-courses')}
             />
           )}
 
