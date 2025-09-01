@@ -6,11 +6,11 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { NAVIGATION_ICONS } from '@/data';
 import { homeSections } from '@/data/mock/places';
-import { getAreaCodes } from '@/services/api/tourism';
+import { getAreaCodes, getTouristSpots, TOURISM_CONTENT_TYPES } from '@/services/api/tourism';
 import { usePlacesStore } from '@/store/slices/placesSlice';
 import { ALL_AREA_CODE, AreaCodeItem } from '@/store/types/places';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
@@ -21,6 +21,9 @@ export default function HomeScreen() {
     setSelectedAreaCode 
   } = usePlacesStore();
   const router = useRouter();
+  
+  // 행사 데이터 상태
+  const [festivalEvents, setFestivalEvents] = useState<any[]>([]);
 
   useEffect(() => {
     // 기본값으로 전국 설정
@@ -39,6 +42,109 @@ export default function HomeScreen() {
 
     fetchAreaCodes();
   }, []);
+
+  // 선택된 지역이 변경될 때마다 행사 데이터 새로고침
+  useEffect(() => {
+    if (!selectedAreaCode) return;
+
+    const fetchFestivalEvents = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('행사 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.FESTIVAL_EVENT,
+          arrange: 'D' // 생성일 순으로 정렬
+        });
+
+        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 1000, 1, 'D');
+        console.log('행사 데이터 로드 완료:', events.length, '개');
+        
+        // 1개월 이내와 3개월 이내 날짜 계산
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        
+        // 1개월 이내 행사 (생성일 순으로 정렬된 상태 유지)
+        const oneMonthEvents = events.filter((event: any) => {
+          if (!event.createdtime) return false;
+          
+          const year = parseInt(event.createdtime.substring(0, 4));
+          const month = parseInt(event.createdtime.substring(4, 6)) - 1;
+          const day = parseInt(event.createdtime.substring(6, 8));
+          const hour = parseInt(event.createdtime.substring(8, 10));
+          const minute = parseInt(event.createdtime.substring(10, 12));
+          const second = parseInt(event.createdtime.substring(12, 14));
+          
+          const eventDate = new Date(year, month, day, hour, minute, second);
+          
+          return eventDate >= oneMonthAgo;
+        });
+        
+        // 1개월~3개월 이내 행사 (랜덤 선택)
+        const oneToThreeMonthsEvents = events.filter((event: any) => {
+          if (!event.createdtime) return false;
+          
+          const year = parseInt(event.createdtime.substring(0, 4));
+          const month = parseInt(event.createdtime.substring(4, 6)) - 1;
+          const day = parseInt(event.createdtime.substring(6, 8));
+          const hour = parseInt(event.createdtime.substring(8, 10));
+          const minute = parseInt(event.createdtime.substring(10, 12));
+          const second = parseInt(event.createdtime.substring(12, 14));
+          
+          const eventDate = new Date(year, month, day, hour, minute, second);
+          
+          return eventDate >= threeMonthsAgo && eventDate < oneMonthAgo;
+        });
+        
+        console.log('1개월 이내 행사:', oneMonthEvents.length, '개');
+        console.log('1개월~3개월 이내 행사:', oneToThreeMonthsEvents.length, '개');
+        
+        // 1개월 이내 행사는 그대로 사용 (이미 생성일 순으로 정렬됨)
+        // 1개월~3개월 이내 행사는 랜덤 선택
+        const randomOneToThreeMonthsEvents = getRandomItems(oneToThreeMonthsEvents, 5);
+        
+        // 최종 결과: 1개월 이내 행사 + 랜덤 선택된 1개월~3개월 이내 행사
+        const finalEvents = [...oneMonthEvents, ...randomOneToThreeMonthsEvents];
+        
+        console.log('최종 선택된 행사:', finalEvents.length, '개');
+        
+        setFestivalEvents(finalEvents);
+      } catch (error) {
+        console.error('행사 데이터 로드 실패:', error);
+      }
+    };
+
+    fetchFestivalEvents();
+  }, [selectedAreaCode]);
+
+  // 배열에서 랜덤하게 n개 선택하는 함수
+  const getRandomItems = (array: any[], n: number): any[] => {
+    const shuffled = [...array].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, n);
+  };
+
+  // API 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertToImageCardFormat = (event: any) => ({
+    id: event.contentId,
+    title: event.title,
+    subtitle: event.addr1,
+    image: event.firstimage || event.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: event.title,
+    category: '축제공연행사',
+    rating: 4.5, // 기본값
+    reviewCount: Math.floor(Math.random() * 100) + 10, // 랜덤 리뷰 수
+    isRecommended: Math.random() > 0.5, // 랜덤 추천 여부
+    location: event.addr1,
+    // 추가 정보
+    address: event.addr1,
+    tel: event.tel,
+    mapX: event.mapX,
+    mapY: event.mapY,
+  });
 
   const handleAreaSelect = (areaCode: AreaCodeItem) => {
     setSelectedAreaCode(areaCode);
@@ -124,13 +230,21 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </ThemedView>
 
-          {/* AsyncStorage 테스트 섹션 */}
-          {/* <ThemedView style={styles.testSection}>
-            <ThemedText style={styles.testSectionTitle}>AsyncStorage 테스트</ThemedText>
-            <AsyncStorageTest />
-          </ThemedView> */}
+          {/* 요즘 뜨는 행사 섹션 */}
+          {festivalEvents.length > 0 && (
+            <HorizontalScrollSection
+              section={{
+                id: 'trending-events',
+                title: '요즘 뜨는 행사',
+                type: 'horizontal-scroll',
+                items: festivalEvents.map(convertToImageCardFormat),
+              }}
+              renderItem={renderImageCard}
+              onMorePress={() => handleMorePress('trending-events')}
+            />
+          )}
 
-          {/* 홈 메인 컨텐츠 */}
+          {/* 홈 메인 컨텐츠 (기존 섹션들) */}
           {homeSections.map((section) => (
             <HorizontalScrollSection
               key={section.id}
