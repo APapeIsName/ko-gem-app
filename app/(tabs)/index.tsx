@@ -5,7 +5,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { NAVIGATION_ICONS } from '@/data';
-import { homeSections } from '@/data/mock/places';
 import { getAreaCodes, getTouristSpots, TOURISM_CONTENT_TYPES } from '@/services/api/tourism';
 import { usePlacesStore } from '@/store/slices/placesSlice';
 import { ALL_AREA_CODE, AreaCodeItem } from '@/store/types/places';
@@ -25,6 +24,8 @@ export default function HomeScreen() {
   // 행사 데이터 상태
   const [festivalEvents, setFestivalEvents] = useState<any[]>([]);
   const [travelCourses, setTravelCourses] = useState<any[]>([]);
+  const [culturalFacilities, setCulturalFacilities] = useState<any[]>([]);
+  const [hiddenSpots, setHiddenSpots] = useState<any[]>([]);
 
   useEffect(() => {
     // 기본값으로 전국 설정
@@ -142,8 +143,56 @@ export default function HomeScreen() {
       }
     };
 
+    const fetchCulturalFacilities = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('문화시설 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.CULTURAL_FACILITY
+        });
+
+        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 1000, 1);
+        console.log('문화시설 데이터 로드 완료:', facilities.length, '개');
+        
+        // 완전히 랜덤하게 6개 선택
+        const randomFacilities = getRandomItems(facilities, 6);
+        console.log('랜덤 선택된 문화시설:', randomFacilities.length, '개');
+        
+        setCulturalFacilities(randomFacilities);
+      } catch (error) {
+        console.error('문화시설 데이터 로드 실패:', error);
+      }
+    };
+
+    const fetchHiddenSpots = async () => {
+      try {
+        // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
+        const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
+        
+        console.log('숨겨진 관광명소 데이터 요청:', {
+          areaCode: areaCode || '전국',
+          contentTypeId: TOURISM_CONTENT_TYPES.TOURIST_SPOT
+        });
+
+        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 1000, 1);
+        console.log('숨겨진 관광명소 데이터 로드 완료:', spots.length, '개');
+        
+        // 완전히 랜덤하게 7개 선택
+        const randomSpots = getRandomItems(spots, 7);
+        console.log('랜덤 선택된 숨겨진 관광명소:', randomSpots.length, '개');
+        
+        setHiddenSpots(randomSpots);
+      } catch (error) {
+        console.error('숨겨진 관광명소 데이터 로드 실패:', error);
+      }
+    };
+
     fetchFestivalEvents();
     fetchTravelCourses();
+    fetchCulturalFacilities();
+    fetchHiddenSpots();
   }, [selectedAreaCode]);
 
   // 배열에서 랜덤하게 n개 선택하는 함수
@@ -188,6 +237,44 @@ export default function HomeScreen() {
     tel: course.tel,
     mapX: course.mapX,
     mapY: course.mapY,
+  });
+
+  // 문화시설 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertCulturalFacilityToImageCardFormat = (facility: any) => ({
+    id: facility.contentId,
+    title: facility.title,
+    subtitle: facility.addr1,
+    image: facility.firstimage || facility.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: facility.title,
+    category: '문화시설',
+    rating: 4.4, // 기본값
+    reviewCount: Math.floor(Math.random() * 150) + 15, // 랜덤 리뷰 수
+    isRecommended: Math.random() > 0.4, // 랜덤 추천 여부
+    location: facility.addr1,
+    // 추가 정보
+    address: facility.addr1,
+    tel: facility.tel,
+    mapX: facility.mapX,
+    mapY: facility.mapY,
+  });
+
+  // 숨겨진 관광명소 데이터를 ImageCard 형식으로 변환하는 함수
+  const convertHiddenSpotToImageCardFormat = (spot: any) => ({
+    id: spot.contentId,
+    title: spot.title,
+    subtitle: spot.addr1,
+    image: spot.firstimage || spot.firstimage2 || 'https://via.placeholder.com/300x200',
+    overlay: spot.title,
+    category: '관광지',
+    rating: 4.6, // 기본값 (숨겨진 명소는 평점이 높을 것)
+    reviewCount: Math.floor(Math.random() * 100) + 5, // 랜덤 리뷰 수 (적은 리뷰로 숨겨진 느낌)
+    isRecommended: Math.random() > 0.2, // 랜덤 추천 여부 (숨겨진 명소는 추천 확률 높게)
+    location: spot.addr1,
+    // 추가 정보
+    address: spot.addr1,
+    tel: spot.tel,
+    mapX: spot.mapX,
+    mapY: spot.mapY,
   });
 
   const handleAreaSelect = (areaCode: AreaCodeItem) => {
@@ -302,15 +389,33 @@ export default function HomeScreen() {
             />
           )}
 
-          {/* 홈 메인 컨텐츠 (기존 섹션들) */}
-          {homeSections.map((section) => (
+          {/* 요즘 핫한 플레이스 섹션 */}
+          {culturalFacilities.length > 0 && (
             <HorizontalScrollSection
-              key={section.id}
-              section={section}
+              section={{
+                id: 'hot-places',
+                title: '요즘 핫한 플레이스',
+                type: 'horizontal-scroll',
+                items: culturalFacilities.map(convertCulturalFacilityToImageCardFormat),
+              }}
               renderItem={renderImageCard}
-              onMorePress={() => handleMorePress(section.id)}
+              onMorePress={() => handleMorePress('hot-places')}
             />
-          ))}
+          )}
+
+          {/* 숨겨진 관광명소 섹션 */}
+          {hiddenSpots.length > 0 && (
+            <HorizontalScrollSection
+              section={{
+                id: 'hidden-spots',
+                title: '숨겨진 관광명소',
+                type: 'horizontal-scroll',
+                items: hiddenSpots.map(convertHiddenSpotToImageCardFormat),
+              }}
+              renderItem={renderImageCard}
+              onMorePress={() => handleMorePress('hidden-spots')}
+            />
+          )}
 
           {/* 바텀 내비게이션 바를 위한 여백 */}
           <ThemedView style={styles.bottomSpacer} />
