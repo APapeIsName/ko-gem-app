@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kogem",
+    "redirectUri": "kogem://auth/callback",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
