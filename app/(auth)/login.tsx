@@ -34,14 +34,14 @@ export default function LoginScreen() {
           textColor="#000000"
           logoImage={require('@/assets/images/logo-google.png')}
         />
-        <AuthPlatformButton 
+        {/* <AuthPlatformButton 
           platform="apple" 
           onPress={handleAppleLogin} 
           platformName="Apple"
           backgroundColor="#000000"
           textColor="#FFFFFF"
           logoImage={require('@/assets/images/logo-apple.png')}
-        />
+        /> */}
       </View>
     </ThemedView>
   );
