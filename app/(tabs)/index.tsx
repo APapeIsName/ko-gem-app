@@ -36,7 +36,6 @@ export default function HomeScreen() {
       try {
         const codes = await getAreaCodes(20, 1);
         setAreaCodes(codes);
-        console.log('지역 코드 로드 완료:', codes);
       } catch (error) {
         console.error('지역 코드 로드 실패:', error);
       }
@@ -54,14 +53,32 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        console.log('행사 데이터 요청:', {
-          areaCode: areaCode || '전국',
-          contentTypeId: TOURISM_CONTENT_TYPES.FESTIVAL_EVENT,
-          arrange: 'D' // 생성일 순으로 정렬
+        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 20, 1);
+        
+        // 생성일순으로 정렬 (createdtime 기준)
+        const sortedEvents = events.sort((a: any, b: any) => {
+          if (!a.createdtime || !b.createdtime) return 0;
+          
+          const dateA = new Date(
+            parseInt(a.createdtime.substring(0, 4)),
+            parseInt(a.createdtime.substring(4, 6)) - 1,
+            parseInt(a.createdtime.substring(6, 8)),
+            parseInt(a.createdtime.substring(8, 10)),
+            parseInt(a.createdtime.substring(10, 12)),
+            parseInt(a.createdtime.substring(12, 14))
+          );
+          
+          const dateB = new Date(
+            parseInt(b.createdtime.substring(0, 4)),
+            parseInt(b.createdtime.substring(4, 6)) - 1,
+            parseInt(b.createdtime.substring(6, 8)),
+            parseInt(b.createdtime.substring(8, 10)),
+            parseInt(b.createdtime.substring(10, 12)),
+            parseInt(b.createdtime.substring(12, 14))
+          );
+          
+          return dateB.getTime() - dateA.getTime(); // 최신순 (내림차순)
         });
-
-        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 1000, 1, 'D');
-        console.log('행사 데이터 로드 완료:', events.length, '개');
         
         // 1개월 이내와 3개월 이내 날짜 계산
         const oneMonthAgo = new Date();
@@ -70,8 +87,8 @@ export default function HomeScreen() {
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
         
-        // 1개월 이내 행사 (생성일 순으로 정렬된 상태 유지)
-        const oneMonthEvents = events.filter((event: any) => {
+        // 1개월 이내 행사 (이미 생성일 순으로 정렬됨)
+        const oneMonthEvents = sortedEvents.filter((event: any) => {
           if (!event.createdtime) return false;
           
           const year = parseInt(event.createdtime.substring(0, 4));
@@ -87,7 +104,7 @@ export default function HomeScreen() {
         });
         
         // 1개월~3개월 이내 행사 (랜덤 선택)
-        const oneToThreeMonthsEvents = events.filter((event: any) => {
+        const oneToThreeMonthsEvents = sortedEvents.filter((event: any) => {
           if (!event.createdtime) return false;
           
           const year = parseInt(event.createdtime.substring(0, 4));
@@ -102,17 +119,12 @@ export default function HomeScreen() {
           return eventDate >= threeMonthsAgo && eventDate < oneMonthAgo;
         });
         
-        console.log('1개월 이내 행사:', oneMonthEvents.length, '개');
-        console.log('1개월~3개월 이내 행사:', oneToThreeMonthsEvents.length, '개');
-        
         // 1개월 이내 행사는 그대로 사용 (이미 생성일 순으로 정렬됨)
         // 1개월~3개월 이내 행사는 랜덤 선택
         const randomOneToThreeMonthsEvents = getRandomItems(oneToThreeMonthsEvents, 5);
         
-        // 최종 결과: 1개월 이내 행사 + 랜덤 선택된 1개월~3개월 이내 행사
-        const finalEvents = [...oneMonthEvents, ...randomOneToThreeMonthsEvents];
-        
-        console.log('최종 선택된 행사:', finalEvents.length, '개');
+        // 최종 결과: 1개월 이내 행사 + 랜덤 선택된 1개월~3개월 이내 행사 (최대 5개)
+        const finalEvents = [...oneMonthEvents, ...randomOneToThreeMonthsEvents].slice(0, 5);
         
         setFestivalEvents(finalEvents);
       } catch (error) {
@@ -125,17 +137,10 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        console.log('여행 코스 데이터 요청:', {
-          areaCode: areaCode || '전국',
-          contentTypeId: TOURISM_CONTENT_TYPES.TRAVEL_COURSE
-        });
-
-        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 1000, 1);
-        console.log('여행 코스 데이터 로드 완료:', courses.length, '개');
+        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 20, 1);
         
-        // 완전히 랜덤하게 8개 선택
-        const randomCourses = getRandomItems(courses, 8);
-        console.log('랜덤 선택된 여행 코스:', randomCourses.length, '개');
+        // 완전히 랜덤하게 5개 선택
+        const randomCourses = getRandomItems(courses, 5);
         
         setTravelCourses(randomCourses);
       } catch (error) {
@@ -148,17 +153,10 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        console.log('문화시설 데이터 요청:', {
-          areaCode: areaCode || '전국',
-          contentTypeId: TOURISM_CONTENT_TYPES.CULTURAL_FACILITY
-        });
-
-        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 1000, 1);
-        console.log('문화시설 데이터 로드 완료:', facilities.length, '개');
+        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 20, 1);
         
-        // 완전히 랜덤하게 6개 선택
-        const randomFacilities = getRandomItems(facilities, 6);
-        console.log('랜덤 선택된 문화시설:', randomFacilities.length, '개');
+        // 완전히 랜덤하게 5개 선택
+        const randomFacilities = getRandomItems(facilities, 5);
         
         setCulturalFacilities(randomFacilities);
       } catch (error) {
@@ -171,17 +169,10 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        console.log('숨겨진 관광명소 데이터 요청:', {
-          areaCode: areaCode || '전국',
-          contentTypeId: TOURISM_CONTENT_TYPES.TOURIST_SPOT
-        });
-
-        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 1000, 1);
-        console.log('숨겨진 관광명소 데이터 로드 완료:', spots.length, '개');
+        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 20, 1);
         
-        // 완전히 랜덤하게 7개 선택
-        const randomSpots = getRandomItems(spots, 7);
-        console.log('랜덤 선택된 숨겨진 관광명소:', randomSpots.length, '개');
+        // 완전히 랜덤하게 5개 선택
+        const randomSpots = getRandomItems(spots, 5);
         
         setHiddenSpots(randomSpots);
       } catch (error) {
@@ -212,12 +203,11 @@ export default function HomeScreen() {
     rating: 4.5, // 기본값
     reviewCount: Math.floor(Math.random() * 100) + 10, // 랜덤 리뷰 수
     isRecommended: Math.random() > 0.5, // 랜덤 추천 여부
-    location: event.addr1,
-    // 추가 정보
-    address: event.addr1,
-    tel: event.tel,
-    mapX: event.mapX,
-    mapY: event.mapY,
+    location: {
+      latitude: parseFloat(event.mapY) || 37.5665, // 기본값: 서울
+      longitude: parseFloat(event.mapX) || 126.9780, // 기본값: 서울
+      address: event.addr1 || '',
+    },
   });
 
   // 여행 코스 데이터를 ImageCard 형식으로 변환하는 함수
@@ -231,12 +221,11 @@ export default function HomeScreen() {
     rating: 4.3, // 기본값
     reviewCount: Math.floor(Math.random() * 200) + 20, // 랜덤 리뷰 수
     isRecommended: Math.random() > 0.3, // 랜덤 추천 여부 (여행 코스는 추천 확률 높게)
-    location: course.addr1,
-    // 추가 정보
-    address: course.addr1,
-    tel: course.tel,
-    mapX: course.mapX,
-    mapY: course.mapY,
+    location: {
+      latitude: parseFloat(course.mapY) || 37.5665, // 기본값: 서울
+      longitude: parseFloat(course.mapX) || 126.9780, // 기본값: 서울
+      address: course.addr1 || '',
+    },
   });
 
   // 문화시설 데이터를 ImageCard 형식으로 변환하는 함수
@@ -250,12 +239,11 @@ export default function HomeScreen() {
     rating: 4.4, // 기본값
     reviewCount: Math.floor(Math.random() * 150) + 15, // 랜덤 리뷰 수
     isRecommended: Math.random() > 0.4, // 랜덤 추천 여부
-    location: facility.addr1,
-    // 추가 정보
-    address: facility.addr1,
-    tel: facility.tel,
-    mapX: facility.mapX,
-    mapY: facility.mapY,
+    location: {
+      latitude: parseFloat(facility.mapY) || 37.5665, // 기본값: 서울
+      longitude: parseFloat(facility.mapX) || 126.9780, // 기본값: 서울
+      address: facility.addr1 || '',
+    },
   });
 
   // 숨겨진 관광명소 데이터를 ImageCard 형식으로 변환하는 함수
@@ -269,18 +257,15 @@ export default function HomeScreen() {
     rating: 4.6, // 기본값 (숨겨진 명소는 평점이 높을 것)
     reviewCount: Math.floor(Math.random() * 100) + 5, // 랜덤 리뷰 수 (적은 리뷰로 숨겨진 느낌)
     isRecommended: Math.random() > 0.2, // 랜덤 추천 여부 (숨겨진 명소는 추천 확률 높게)
-    location: spot.addr1,
-    // 추가 정보
-    address: spot.addr1,
-    tel: spot.tel,
-    mapX: spot.mapX,
-    mapY: spot.mapY,
+    location: {
+      latitude: parseFloat(spot.mapY) || 37.5665, // 기본값: 서울
+      longitude: parseFloat(spot.mapX) || 126.9780, // 기본값: 서울
+      address: spot.addr1 || '',
+    },
   });
 
   const handleAreaSelect = (areaCode: AreaCodeItem) => {
     setSelectedAreaCode(areaCode);
-    console.log('선택된 지역:', areaCode.name, areaCode.code);
-    // TODO: 선택된 지역에 따라 데이터 새로고침
   };
 
   const handleSearchPress = () => {
@@ -292,10 +277,9 @@ export default function HomeScreen() {
   };
 
   const handleItemPress = (item: any) => {
-    console.log('아이템 선택:', item.title);
     
     // 카테고리에 따라 다른 상세 페이지로 이동
-    if (item.category === '축제' || item.category === '공연' || item.category === '체험') {
+    if (item.category === '축제공연행사') {
       // 행사인 경우
       router.push({
         pathname: '/event-detail',
@@ -325,7 +309,6 @@ export default function HomeScreen() {
   };
 
   const handleMorePress = (sectionId: string) => {
-    console.log('더보기:', sectionId);
     // TODO: 더보기 화면으로 이동
   };
 
