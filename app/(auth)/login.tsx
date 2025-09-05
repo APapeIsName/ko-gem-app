@@ -1,29 +1,158 @@
+import { DeepLinkHandler } from '@/components/auth/DeepLinkHandler';
 import { AuthPlatformButton } from '@/components/auth/login/AuthPlatformButton';
-import { OAuthWebView } from '@/components/auth/OAuthWebView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { AuthService } from '@/services/auth/authService';
+import { setSessionFromUrl, signInWithGoogle } from '@/services/api/supabase/auth';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Alert, Dimensions, Modal, Platform, StyleSheet, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 const { height } = Dimensions.get('window');
 
+// 플랫폼별 User-Agent 생성
+const getUserAgent = () => {
+  if (Platform.OS === 'ios') {
+    return 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1';
+  } else {
+    return 'Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36';
+  }
+};
+
+// 인라인 OAuthWebView 컴포넌트
+interface OAuthWebViewProps {
+  url: string;
+  visible: boolean;
+  onClose: () => void;
+  onSuccess: (url: string) => void;
+  onError: (error: string) => void;
+}
+
+function OAuthWebView({ url, visible, onClose, onSuccess, onError }: OAuthWebViewProps) {
+  const webViewRef = useRef<WebView>(null);
+  const [loading, setLoading] = useState(true);
+
+  const handleNavigationStateChange = (navState: any) => {
+    console.log('WebView 네비게이션:', navState.url);
+
+    // 딥링크 콜백 URL 확인
+    if (navState.url.includes('kogem://auth/callback')) {
+      console.log('OAuth 콜백 감지:', navState.url);
+      onSuccess(navState.url);
+      onClose();
+    }
+  };
+
+  const handleShouldStartLoadWithRequest = (request: any) => {
+    console.log('WebView 로드 요청:', request.url);
+    
+    // 커스텀 스키마 URL은 WebView에서 로드하지 않고 직접 처리
+    if (request.url.includes('kogem://auth/callback')) {
+      console.log('커스텀 스키마 콜백 감지, 직접 처리');
+      onSuccess(request.url);
+      onClose();
+      return false; // WebView에서 로드하지 않음
+    }
+    
+    return true; // 다른 URL은 정상적으로 로드
+  };
+
+  const handleError = (error: any) => {
+    // 커스텀 스키마 리다이렉트 오류는 정상적인 OAuth 플로우의 일부
+    if (error.nativeEvent?.description?.includes('scheme that is not HTTP')) {
+      console.log('OAuth 콜백 리다이렉트 완료 - WebView 닫는 중');
+      // 오류로 처리하지 않고 WebView만 닫기
+      onClose();
+      return;
+    }
+    
+    // 실제 오류인 경우에만 로그 출력
+    console.error('WebView 실제 오류:', error);
+    onError('로그인 중 오류가 발생했습니다.');
+    onClose();
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={webViewStyles.container}>
+        <View style={webViewStyles.header}>
+          <ThemedText style={webViewStyles.title}>Google 로그인</ThemedText>
+          <ThemedText 
+            style={webViewStyles.closeButton} 
+            onPress={onClose}
+          >
+            닫기
+          </ThemedText>
+        </View>
+
+        {loading && (
+          <View style={webViewStyles.loadingContainer}>
+            <ThemedText>로딩 중...</ThemedText>
+          </View>
+        )}
+
+        <WebView
+          ref={webViewRef}
+          source={{ uri: url }}
+          style={webViewStyles.webview}
+          onNavigationStateChange={handleNavigationStateChange}
+          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+          onError={handleError}
+          onLoadStart={() => setLoading(true)}
+          onLoadEnd={() => setLoading(false)}
+          startInLoadingState={true}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          userAgent={getUserAgent()}
+          sharedCookiesEnabled={true}
+          thirdPartyCookiesEnabled={true}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
+          mixedContentMode="compatibility"
+          originWhitelist={['*']}
+          allowsBackForwardNavigationGestures={true}
+        />
+      </View>
+    </Modal>
+  );
+}
+
 export default function LoginScreen() {
   const router = useRouter();
-  const [oauthUrl, setOauthUrl] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showWebView, setShowWebView] = useState(false);
+  const [oauthUrl, setOauthUrl] = useState('');
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('Google 로그인 시작');
-      const result = await AuthService.signInWithGoogle();
-      console.log('OAuth URL:', result.url);
+      setIsLoading(true);
+      console.log('Google OAuth WebView 로그인 시작');
       
-      if (result.url) {
+      // Supabase OAuth URL 생성
+      const result = await signInWithGoogle();
+      console.log('OAuth 결과:', result);
+      
+      if (result && result.url) {
+        console.log('WebView로 OAuth URL 열기:', result.url);
+        
+        // WebView로 OAuth URL 열기
         setOauthUrl(result.url);
+        setShowWebView(true);
+        setIsLoading(false);
+      } else {
+        console.error('OAuth URL을 받을 수 없음');
+        Alert.alert('오류', 'OAuth URL을 생성할 수 없습니다.');
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Google 로그인 오류:', error);
+      Alert.alert('오류', `Google 로그인 중 오류: ${(error as Error).message || error}`);
+      setIsLoading(false);
     }
   };
 
@@ -32,21 +161,61 @@ export default function LoginScreen() {
     console.log('Apple 로그인');
   };
 
-  const handleOAuthSuccess = (result: any) => {
-    console.log('OAuth 성공:', result);
-    // 로그인 성공 후 메인 화면으로 이동
-    router.replace('/(tabs)');
+  const handleDeepLinkSuccess = async (url: string) => {
+    console.log('딥링크 OAuth 성공:', url);
+    
+    try {
+      setIsLoading(true);
+      
+      // Supabase 세션 설정
+      const sessionData = await setSessionFromUrl(url);
+      console.log('세션 설정 완료:', sessionData.user?.email);
+      
+      setIsLoading(false);
+      Alert.alert('로그인 성공', `${sessionData.user?.email}로 로그인되었습니다!`, [
+        { text: '확인', onPress: () => router.replace('/(tabs)') }
+      ]);
+    } catch (error) {
+      console.error('세션 설정 실패:', error);
+      setIsLoading(false);
+      Alert.alert('로그인 실패', `세션 설정 중 오류가 발생했습니다: ${(error as Error).message || error}`);
+    }
   };
 
-  const handleOAuthError = (error: any) => {
-    console.error('OAuth 오류:', error);
+  const handleDeepLinkError = (error: string) => {
+    console.error('딥링크 OAuth 오류:', error);
+    setIsLoading(false);
+    Alert.alert('로그인 실패', error);
+  };
+
+  const handleWebViewClose = () => {
+    console.log('WebView 닫기');
+    setShowWebView(false);
     setOauthUrl('');
   };
 
-  const handleOAuthClose = () => {
-    console.log('OAuth 취소됨');
+  const handleWebViewSuccess = (url: string) => {
+    console.log('WebView OAuth 성공:', url);
+    setShowWebView(false);
     setOauthUrl('');
+    setIsLoading(false);
+    
+    // 수동으로 딥링크 핸들러 호출
+    handleDeepLinkSuccess(url);
   };
+
+  const handleWebViewError = (error: string) => {
+    console.error('WebView OAuth 오류:', error);
+    setShowWebView(false);
+    setOauthUrl('');
+    setIsLoading(false);
+    // 커스텀 스키마 리다이렉트 오류가 아닌 경우에만 알림 표시
+    if (!error.includes('커스텀 스키마 리다이렉트')) {
+      Alert.alert('로그인 실패', error);
+    }
+  };
+
+
 
   return (
     <ThemedView style={styles.container}>
@@ -60,9 +229,9 @@ export default function LoginScreen() {
         <AuthPlatformButton 
           platform="google" 
           onPress={handleGoogleLogin} 
-          platformName="Google"
-          backgroundColor="#FFFFFF"
-          textColor="#000000"
+          platformName={isLoading ? "로그인 중..." : "Google"}
+          backgroundColor={isLoading ? "#E5E7EB" : "#FFFFFF"}
+          textColor={isLoading ? "#9CA3AF" : "#000000"}
           logoImage={require('@/assets/images/logo-google.png')}
         />
         {/* <AuthPlatformButton 
@@ -75,15 +244,20 @@ export default function LoginScreen() {
         /> */}
       </View>
 
-      {/* OAuth 웹뷰 */}
-      {oauthUrl && (
-        <OAuthWebView
-          url={oauthUrl}
-          onSuccess={handleOAuthSuccess}
-          onError={handleOAuthError}
-          onClose={handleOAuthClose}
-        />
-      )}
+      {/* OAuth WebView */}
+      <OAuthWebView
+        url={oauthUrl}
+        visible={showWebView}
+        onClose={handleWebViewClose}
+        onSuccess={handleWebViewSuccess}
+        onError={handleWebViewError}
+      />
+
+      {/* 딥링크 핸들러 */}
+      <DeepLinkHandler
+        onAuthSuccess={handleDeepLinkSuccess}
+        onAuthError={handleDeepLinkError}
+      />
     </ThemedView>
   );
 }
@@ -111,5 +285,39 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingBottom: 50, // 하단 여백
     gap: 16, // 버튼 간격
+  },
+});
+
+const webViewStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 60, // 상태바 고려
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  closeButton: {
+    fontSize: 16,
+    color: '#007AFF',
+  },
+  loadingContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -50 }, { translateY: -50 }],
+    zIndex: 1,
+  },
+  webview: {
+    flex: 1,
   },
 });
