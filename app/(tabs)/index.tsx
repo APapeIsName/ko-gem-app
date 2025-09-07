@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { NAVIGATION_ICONS } from '@/data';
+import { supabase } from '@/services/api/supabase/client';
 import { getAreaCodes, getTouristSpots, TOURISM_CONTENT_TYPES } from '@/services/api/tourism';
 import { usePlacesStore } from '@/store/slices/placesSlice';
 import { ALL_AREA_CODE, AreaCodeItem } from '@/store/types/places';
@@ -21,11 +22,38 @@ export default function HomeScreen() {
   } = usePlacesStore();
   const router = useRouter();
   
+  // 사용자 정보 상태
+  const [user, setUser] = useState<any>(null);
+  
   // 행사 데이터 상태
   const [festivalEvents, setFestivalEvents] = useState<any[]>([]);
   const [travelCourses, setTravelCourses] = useState<any[]>([]);
   const [culturalFacilities, setCulturalFacilities] = useState<any[]>([]);
   const [hiddenSpots, setHiddenSpots] = useState<any[]>([]);
+
+  // 사용자 세션 확인
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        console.log('현재 로그인된 사용자:', user.email);
+        console.log('사용자 메타데이터:', user.user_metadata);
+      } else {
+        console.log('로그인된 사용자 없음');
+      }
+    };
+    
+    checkUser();
+    
+    // 인증 상태 변경 리스너
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('인증 상태 변경:', event, session?.user?.email);
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     // 기본값으로 전국 설정
@@ -34,7 +62,7 @@ export default function HomeScreen() {
     // 지역 코드 API 호출
     const fetchAreaCodes = async () => {
       try {
-        const codes = await getAreaCodes(20, 1);
+        const codes = await getAreaCodes(1000, 1);
         setAreaCodes(codes);
       } catch (error) {
         console.error('지역 코드 로드 실패:', error);
@@ -53,7 +81,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 20, 1);
+        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 1000, 1);
         
         // 생성일순으로 정렬 (createdtime 기준)
         const sortedEvents = events.sort((a: any, b: any) => {
@@ -137,7 +165,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 20, 1);
+        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 1000, 1);
         
         // 완전히 랜덤하게 5개 선택
         const randomCourses = getRandomItems(courses, 5);
@@ -153,7 +181,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 20, 1);
+        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 1000, 1);
         
         // 완전히 랜덤하게 5개 선택
         const randomFacilities = getRandomItems(facilities, 5);
@@ -169,7 +197,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 20, 1);
+        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 1000, 1);
         
         // 완전히 랜덤하게 5개 선택
         const randomSpots = getRandomItems(spots, 5);
@@ -330,6 +358,15 @@ export default function HomeScreen() {
         useSafeArea={true}
       />
       
+      {/* 사용자 정보 표시 (개발용) */}
+      {user && (
+        <ThemedView style={styles.userInfo}>
+          <ThemedText style={styles.userText}>
+            🟢 로그인됨: {user.email} ({user.user_metadata?.full_name || '이름 없음'})
+          </ThemedText>
+        </ThemedView>
+      )}
+      
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>
           {/* 검색 섹션 */}
@@ -413,6 +450,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     zIndex: 1, // 낮은 zIndex로 설정
+  },
+  userInfo: {
+    backgroundColor: '#e8f5e8',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#d4edda',
+  },
+  userText: {
+    fontSize: 14,
+    color: '#155724',
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
