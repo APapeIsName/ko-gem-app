@@ -112,7 +112,7 @@ interface TouristSpotResponse {
 
 // 지역 코드 조회
 export const getAreaCodes = async (
-  numOfRows: number = 20,
+  numOfRows: number = 1000,
   pageNo: number = 1
 ): Promise<AreaCodeItem[]> => {
   const maxRetries = 3;
@@ -184,7 +184,7 @@ export const getAreaCodes = async (
 export const getTouristSpots = async (
   contentTypeId: TourismContentType,
   areaCode?: string,
-  numOfRows: number = 20,
+  numOfRows: number = 1000,
   pageNo: number = 1,
   arrange?: string
 ): Promise<TouristSpotItem[]> => {
@@ -267,7 +267,7 @@ export const getTouristSpots = async (
 // 시군구 코드 조회
 export const getSigunguCodes = async (
   areaCode: string,
-  numOfRows: number = 20,
+  numOfRows: number = 1000,
   pageNo: number = 1
 ): Promise<any> => {
   try {
@@ -313,7 +313,7 @@ export const searchTouristSpots = async (
   keyword: string,
   areaCode?: string,
   sigunguCode?: string,
-  numOfRows: number = 20,
+  numOfRows: number = 1000,
   pageNo: number = 1
 ): Promise<any> => {
   try {

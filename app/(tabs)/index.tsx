@@ -62,7 +62,7 @@ export default function HomeScreen() {
     // 지역 코드 API 호출
     const fetchAreaCodes = async () => {
       try {
-        const codes = await getAreaCodes(20, 1);
+        const codes = await getAreaCodes(1000, 1);
         setAreaCodes(codes);
       } catch (error) {
         console.error('지역 코드 로드 실패:', error);
@@ -81,7 +81,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 20, 1);
+        const events = await getTouristSpots(TOURISM_CONTENT_TYPES.FESTIVAL_EVENT, areaCode, 1000, 1);
         
         // 생성일순으로 정렬 (createdtime 기준)
         const sortedEvents = events.sort((a: any, b: any) => {
@@ -165,7 +165,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 20, 1);
+        const courses = await getTouristSpots(TOURISM_CONTENT_TYPES.TRAVEL_COURSE, areaCode, 1000, 1);
         
         // 완전히 랜덤하게 5개 선택
         const randomCourses = getRandomItems(courses, 5);
@@ -181,7 +181,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 20, 1);
+        const facilities = await getTouristSpots(TOURISM_CONTENT_TYPES.CULTURAL_FACILITY, areaCode, 1000, 1);
         
         // 완전히 랜덤하게 5개 선택
         const randomFacilities = getRandomItems(facilities, 5);
@@ -197,7 +197,7 @@ export default function HomeScreen() {
         // 전체(전국)인 경우 areaCode 생략, 특정 지역인 경우 areaCode 사용
         const areaCode = selectedAreaCode.code === '' ? undefined : selectedAreaCode.code;
         
-        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 20, 1);
+        const spots = await getTouristSpots(TOURISM_CONTENT_TYPES.TOURIST_SPOT, areaCode, 1000, 1);
         
         // 완전히 랜덤하게 5개 선택
         const randomSpots = getRandomItems(spots, 5);
