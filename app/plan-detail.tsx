@@ -1,37 +1,33 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Plan } from '@/types/plan/type';
-import { formatDate } from '@/utils/helpers';
+import { usePlanById } from '@/hooks/api/usePlans';
+import { convertUTCToKoreanDate, formatDate } from '@/utils/helpers';
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { PlanService } from '@/services/plans/planService';
 
 export default function PlanDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // TanStack Query를 사용하여 계획 데이터 로드
+  const { 
+    data: plan, 
+    isLoading: loading, 
+    error,
+    refetch 
+  } = usePlanById(typeof id === 'string' ? id : '');
 
-  // 계획 데이터 로드
-  useEffect(() => {
-    const loadPlan = async () => {
-      try {
-        if (typeof id === 'string') {
-          const planService = PlanService.getInstance();
-          const planData = await planService.getPlanById(id);
-          setPlan(planData);
-        }
-      } catch (error) {
-        console.error('계획 로드 실패:', error);
-      } finally {
-        setLoading(false);
+  // 화면이 포커스될 때마다 데이터 새로고침
+  useFocusEffect(
+    useCallback(() => {
+      if (typeof id === 'string') {
+        refetch();
       }
-    };
-
-    loadPlan();
-  }, [id]);
+    }, [id, refetch])
+  );
 
   const handleBackPress = () => {
     router.back();
@@ -70,6 +66,40 @@ export default function PlanDetailScreen() {
     );
   }
 
+  if (error) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBackPress}
+            activeOpacity={0.7}
+          >
+            <IconSymbol name="arrow-back" size={24} color="#11181C" />
+          </TouchableOpacity>
+          <ThemedText style={styles.headerTitle}>계획 상세</ThemedText>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => refetch()}
+            activeOpacity={0.7}
+          >
+            <IconSymbol name="refresh" size={20} color="#10B981" />
+          </TouchableOpacity>
+        </ThemedView>
+        <ThemedView style={styles.errorContainer}>
+          <ThemedText style={styles.errorText}>계획을 불러오는데 실패했습니다.</ThemedText>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={() => refetch()}
+            activeOpacity={0.7}
+          >
+            <ThemedText style={styles.retryButtonText}>다시 시도</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </ThemedView>
+    );
+  }
+
   if (!plan) {
     return (
       <ThemedView style={styles.container}>
@@ -93,9 +123,9 @@ export default function PlanDetailScreen() {
 
   // 날짜 및 시간 포맷팅
   const formatDateTime = (dateString: string, timeString?: string, allDay?: boolean) => {
-    const date = new Date(dateString);
-    const dateFormatted = formatDate(dateString, 'MM월 DD일');
-    const dayFormatted = formatDate(dateString, 'relative');
+    const koreanDateString = convertUTCToKoreanDate(dateString);
+    const dateFormatted = formatDate(koreanDateString, 'MM월 DD일');
+    const dayFormatted = formatDate(koreanDateString, 'relative');
     
     if (allDay) {
       return `${dateFormatted} (${dayFormatted})`;
@@ -239,14 +269,14 @@ export default function PlanDetailScreen() {
                   <View style={styles.metadataItem}>
                     <ThemedText style={styles.metadataLabel}>생성일</ThemedText>
                     <ThemedText style={styles.metadataValue}>
-                      {formatDate(plan.metadata.createdAt, 'YYYY년 MM월 DD일 HH:mm')}
+                      {new Date(plan.metadata.createdAt).toLocaleString('ko-KR')}
                     </ThemedText>
                   </View>
                   
                   <View style={styles.metadataItem}>
                     <ThemedText style={styles.metadataLabel}>수정일</ThemedText>
                     <ThemedText style={styles.metadataValue}>
-                      {formatDate(plan.metadata.updatedAt, 'YYYY년 MM월 DD일 HH:mm')}
+                      {new Date(plan.metadata.updatedAt).toLocaleString('ko-KR')}
                     </ThemedText>
                   </View>
                 </>
@@ -479,5 +509,17 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  retryButton: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -4,8 +4,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useCreatePlan, usePlanById, useUpdatePlan } from '@/hooks/api/usePlans';
-import { Plan, PlanFormData } from '@/types/plan/type';
-import { formatDate } from '@/utils/helpers';
+import { PlanFormData } from '@/types/plan/type';
+import { convertUTCToKoreanDate, createKoreanDateTime, formatDate, getKoreanDate } from '@/utils/helpers';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
@@ -24,14 +24,7 @@ export default function PlanWriteScreen() {
     isEditMode ? id as string : ''
   );
   
-  // 한국 시간대를 고려한 현재 날짜 가져오기
-  const getKoreanDate = () => {
-    const now = new Date();
-    // 한국 시간대 (UTC+9)로 정확하게 변환
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const koreanTime = new Date(utc + (9 * 60000));
-    return koreanTime.toISOString().split('T')[0];
-  };
+  // 한국 시간대를 고려한 현재 날짜는 utils에서 가져옴
   
   // DatePicker와 TimePicker 상태 관리
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -42,7 +35,7 @@ export default function PlanWriteScreen() {
   // 태그 입력 상태
   const [tagInput, setTagInput] = useState('');
   
-  const [formData, setFormData] = useState<PlanFormData>({
+  const [formData, setFormData] = useState<PlanFormData>(() => ({
     title: '',
     description: '',
     startDate: date as string || getKoreanDate(),
@@ -53,19 +46,19 @@ export default function PlanWriteScreen() {
     location: '',
     tags: [],
     notes: '',
-  });
+  }));
 
   // 편집 모드일 때 기존 계획 데이터로 폼 초기화
   useEffect(() => {
     if (isEditMode && existingPlan && !isLoadingPlan) {
-      const startDate = new Date(existingPlan.startDate);
-      const endDate = existingPlan.endDate ? new Date(existingPlan.endDate) : startDate;
+      const startDate = convertUTCToKoreanDate(existingPlan.startDate);
+      const endDate = existingPlan.endDate ? convertUTCToKoreanDate(existingPlan.endDate) : startDate;
       
       setFormData({
         title: existingPlan.title || '',
         description: existingPlan.description || '',
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
+        startDate: startDate,
+        endDate: endDate,
         startTime: existingPlan.startTime || '09:00',
         endTime: existingPlan.endTime || '10:00',
         allDay: existingPlan.allDay || false,
@@ -169,15 +162,15 @@ export default function PlanWriteScreen() {
       
       console.log('계획 저장 시작:', formData);
       
-      // startDate와 startTime을 결합하여 완전한 날짜시간 문자열 생성
       const planData = {
         ...formData,
-        startDate: formData.allDay 
-          ? `${formData.startDate}T00:00:00.000Z`
-          : `${formData.startDate}T${formData.startTime}:00.000Z`,
-        endDate: formData.allDay 
-          ? `${formData.endDate || formData.startDate}T23:59:59.999Z`
-          : `${formData.endDate || formData.startDate}T${formData.endTime}:00.000Z`,
+        startDate: createKoreanDateTime(formData.startDate, formData.startTime || '09:00', formData.allDay, false),
+        endDate: createKoreanDateTime(
+          formData.endDate || formData.startDate, 
+          formData.endTime || '10:00', 
+          formData.allDay, 
+          true
+        ),
       };
       
       console.log('수정된 계획 데이터:', planData);
