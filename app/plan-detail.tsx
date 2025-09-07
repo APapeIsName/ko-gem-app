@@ -2,7 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { usePlanById } from '@/hooks/api/usePlans';
-import { convertUTCToKoreanDate, formatDate } from '@/utils/helpers';
+import { convertUTCToKoreanDate, formatDate, normalizeTags } from '@/utils/helpers';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -218,18 +218,21 @@ export default function PlanDetailScreen() {
           </ThemedView>
 
           {/* 태그 */}
-          {plan.tags && plan.tags.length > 0 && (
-            <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionLabel}>태그</ThemedText>
-              <View style={styles.tagList}>
-                {plan.tags.map((tag, index) => (
-                  <View key={index} style={styles.tagItem}>
-                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
-                  </View>
-                ))}
-              </View>
-            </ThemedView>
-          )}
+          {(() => {
+            const normalizedTags = normalizeTags(plan.tags);
+            return normalizedTags.length > 0 && (
+              <ThemedView style={styles.section}>
+                <ThemedText style={styles.sectionLabel}>태그</ThemedText>
+                <View style={styles.tagList}>
+                  {normalizedTags.map((tag, index) => (
+                    <View key={index} style={styles.tagItem}>
+                      <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </ThemedView>
+            );
+          })()}
 
           {/* 설명 */}
           {plan.description && (

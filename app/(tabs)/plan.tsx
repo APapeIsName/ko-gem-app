@@ -3,7 +3,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useCancelPlan, useCompletePlan, useDeletePlan, usePlans } from '@/hooks/api/usePlans';
 import { Plan, PlanStatus } from '@/types/plan/type';
-import { formatDate, normalizeTags } from '@/utils/helpers';
+import { formatDate, getKoreanDate, normalizeTags } from '@/utils/helpers';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';

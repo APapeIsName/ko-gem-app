@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useCreatePlan, usePlanById, useUpdatePlan } from '@/hooks/api/usePlans';
 import { PlanFormData } from '@/types/plan/type';
-import { convertUTCToKoreanDate, createKoreanDateTime, formatDate, getKoreanDate } from '@/utils/helpers';
+import { convertUTCToKoreanDate, createKoreanDateTime, formatDate, getKoreanDate, normalizeTags } from '@/utils/helpers';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
@@ -63,7 +63,7 @@ export default function PlanWriteScreen() {
         endTime: existingPlan.endTime || '10:00',
         allDay: existingPlan.allDay || false,
         location: existingPlan.location || '',
-        tags: existingPlan.tags || [],
+        tags: normalizeTags(existingPlan.tags),
         notes: existingPlan.notes || '',
       });
     }
@@ -75,20 +75,26 @@ export default function PlanWriteScreen() {
 
   // 태그 추가
   const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags?.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), tagInput.trim()]
-      }));
+    const trimmedTag = tagInput.trim();
+    if (trimmedTag) {
+      const currentTags = normalizeTags(formData.tags);
+      if (!currentTags.includes(trimmedTag)) {
+        setFormData(prev => ({
+          ...prev,
+          tags: [...currentTags, trimmedTag]
+        }));
+      }
       setTagInput('');
     }
   };
 
   // 태그 제거
   const handleRemoveTag = (index: number) => {
+    const currentTags = normalizeTags(formData.tags);
+    const updatedTags = currentTags.filter((_, i) => i !== index);
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags?.filter((_, i) => i !== index) || []
+      tags: updatedTags
     }));
   };
 
@@ -164,6 +170,7 @@ export default function PlanWriteScreen() {
       
       const planData = {
         ...formData,
+        tags: normalizeTags(formData.tags), // 태그 정규화
         startDate: createKoreanDateTime(formData.startDate, formData.startTime || '09:00', formData.allDay, false),
         endDate: createKoreanDateTime(
           formData.endDate || formData.startDate, 
@@ -383,22 +390,25 @@ export default function PlanWriteScreen() {
                 <IconSymbol name="add" size={20} color="#10B981" />
               </TouchableOpacity>
             </View>
-            {formData.tags && formData.tags.length > 0 && (
-              <View style={styles.tagList}>
-                {formData.tags.map((tag, index) => (
-                  <View key={index} style={styles.tagItem}>
-                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
-                    <TouchableOpacity
-                      style={styles.removeTagButton}
-                      onPress={() => handleRemoveTag(index)}
-                      activeOpacity={0.7}
-                    >
-                      <IconSymbol name="close" size={16} color="#6B7280" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
+            {(() => {
+              const normalizedTags = normalizeTags(formData.tags);
+              return normalizedTags.length > 0 && (
+                <View style={styles.tagList}>
+                  {normalizedTags.map((tag, index) => (
+                    <View key={index} style={styles.tagItem}>
+                      <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                      <TouchableOpacity
+                        style={styles.removeTagButton}
+                        onPress={() => handleRemoveTag(index)}
+                        activeOpacity={0.7}
+                      >
+                        <IconSymbol name="close" size={16} color="#6B7280" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              );
+            })()}
           </ThemedView>
 
           {/* 설명 입력 */}

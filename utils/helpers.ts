@@ -139,13 +139,12 @@ export function createKoreanDateTime(
   isEndOfDay: boolean = false
 ): string {
   if (isAllDay) {
-    // 종일 일정의 경우 한국 시간 기준으로 설정
-    const koreanDate = new Date(`${dateStr}T${isEndOfDay ? '23:59:59' : '00:00:00'}`);
-    // 한국 시간을 UTC로 변환 (9시간 빼기)
-    const utcDate = new Date(koreanDate.getTime() - (9 * 60 * 60 * 1000));
+    // 종일 일정의 경우 UTC 기준으로 해당 날짜의 시작/끝 시간 설정
+    // 날짜가 바뀌지 않도록 UTC 기준으로 직접 설정
+    const utcDate = new Date(`${dateStr}T${isEndOfDay ? '23:59:59.000Z' : '00:00:00.000Z'}`);
     return utcDate.toISOString();
   } else {
-    // 시간이 지정된 일정의 경우
+    // 시간이 지정된 일정의 경우 한국 시간을 UTC로 변환
     const koreanDateTime = new Date(`${dateStr}T${timeStr}:00`);
     // 한국 시간을 UTC로 변환 (9시간 빼기)
     const utcDateTime = new Date(koreanDateTime.getTime() - (9 * 60 * 60 * 1000));
