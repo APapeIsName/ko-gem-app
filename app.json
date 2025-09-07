@@ -19,7 +19,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.apape.kogem.dev",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "buildNumber": "3"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,6 +29,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.apape.kogem",
+      "versionCode": 3,
       "intentFilters": [
         {
           "action": "VIEW",
