@@ -43,6 +43,7 @@ export default function RootLayout() {
           <Stack.Screen name="place-detail" options={{ headerShown: false }} />
           <Stack.Screen name="event-detail" options={{ headerShown: false }} />
           <Stack.Screen name="plan-write" options={{ headerShown: false }} />
+          <Stack.Screen name="plan-detail" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

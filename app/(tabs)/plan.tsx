@@ -36,8 +36,10 @@ export default function PlanScreen() {
   };
 
   const handlePlanPress = (plan: Plan) => {
-    // TODO: 계획 상세 보기 또는 편집 화면으로 이동
-    console.log('계획 선택:', plan);
+    router.push({
+      pathname: '/plan-detail',
+      params: { id: plan.id }
+    });
   };
 
   const handleToggleComplete = async (planId: string) => {
