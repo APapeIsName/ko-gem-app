@@ -115,6 +115,43 @@ export function getCurrentDate(): string {
   return formatDate(new Date(), 'YYYY-MM-DD');
 }
 
+// 한국 시간대 기준 현재 날짜 가져오기
+export function getKoreanDate(): string {
+  const now = new Date();
+  // 한국 시간대 (UTC+9)로 정확하게 변환
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const koreanTime = new Date(utc + (9 * 60 * 60 * 1000));
+  return koreanTime.toISOString().split('T')[0];
+}
+
+// UTC 날짜를 한국 시간대로 변환
+export function convertUTCToKoreanDate(utcDateString: string): string {
+  const utcDate = new Date(utcDateString);
+  const koreanDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+  return koreanDate.toISOString().split('T')[0];
+}
+
+// 한국 시간대 날짜를 UTC로 변환하여 저장용 ISO 문자열 생성
+export function createKoreanDateTime(
+  dateStr: string, 
+  timeStr: string, 
+  isAllDay: boolean, 
+  isEndOfDay: boolean = false
+): string {
+  if (isAllDay) {
+    // 종일 일정의 경우 UTC 기준으로 해당 날짜의 시작/끝 시간 설정
+    // 날짜가 바뀌지 않도록 UTC 기준으로 직접 설정
+    const utcDate = new Date(`${dateStr}T${isEndOfDay ? '23:59:59.000Z' : '00:00:00.000Z'}`);
+    return utcDate.toISOString();
+  } else {
+    // 시간이 지정된 일정의 경우 한국 시간을 UTC로 변환
+    const koreanDateTime = new Date(`${dateStr}T${timeStr}:00`);
+    // 한국 시간을 UTC로 변환 (9시간 빼기)
+    const utcDateTime = new Date(koreanDateTime.getTime() - (9 * 60 * 60 * 1000));
+    return utcDateTime.toISOString();
+  }
+}
+
 // 현재 시간을 HH:mm 형식으로 반환
 export function getCurrentTime(): string {
   return formatTime(new Date(), 'HH:mm');

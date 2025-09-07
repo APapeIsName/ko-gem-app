@@ -1,29 +1,21 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useCancelPlan, useCompletePlan, useDeletePlan, usePlansByDate } from '@/hooks/api/usePlans';
+import { useCancelPlan, useCompletePlan, useDeletePlan, usePlans } from '@/hooks/api/usePlans';
 import { Plan, PlanStatus } from '@/types/plan/type';
-import { formatDate, normalizeTags } from '@/utils/helpers';
+import { formatDate, getKoreanDate, normalizeTags } from '@/utils/helpers';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function PlanScreen() {
   const router = useRouter();
-  
-  // 한국 시간대를 고려한 현재 날짜 가져오기
-  const getKoreanDate = () => {
-    const now = new Date();
-    // 한국 시간대 (UTC+9)로 정확하게 변환
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const koreanTime = new Date(utc + (9 * 60000));
-    return koreanTime.toISOString().split('T')[0];
-  };
-  
-  const [selectedDate, setSelectedDate] = useState(getKoreanDate());
 
-  // TanStack Query를 사용하여 계획 데이터 관리
-  const { data: plans = [], isLoading, error, refetch } = usePlansByDate(selectedDate);
+  // TanStack Query를 사용하여 전체 계획 데이터 관리 (날짜순 정렬)
+  const { data: plans = [], isLoading, error, refetch } = usePlans(
+    undefined, // 필터 없음
+    { field: 'startDate', direction: 'asc' } // 시작일 기준 오름차순 정렬
+  );
   const completePlanMutation = useCompletePlan();
   const cancelPlanMutation = useCancelPlan();
   const deletePlanMutation = useDeletePlan();
@@ -31,13 +23,15 @@ export default function PlanScreen() {
   const handleAddPlan = () => {
     router.push({
       pathname: '/plan-write',
-      params: { date: selectedDate }
+      params: { date: getKoreanDate() }
     });
   };
 
   const handlePlanPress = (plan: Plan) => {
-    // TODO: 계획 상세 보기 또는 편집 화면으로 이동
-    console.log('계획 선택:', plan);
+    router.push({
+      pathname: '/plan-detail',
+      params: { id: plan.id }
+    });
   };
 
   const handleToggleComplete = async (planId: string) => {
@@ -141,6 +135,19 @@ export default function PlanScreen() {
           {item.title}
         </ThemedText>
         
+        {/* 날짜 정보 */}
+        <View style={styles.planDateContainer}>
+          <IconSymbol name="calendar-today" size={16} color="#6B7280" />
+          <ThemedText style={styles.planDate}>
+            {formatDate(item.startDate, 'MM월 DD일')} ({formatDate(item.startDate, 'relative')})
+          </ThemedText>
+          {item.allDay && (
+            <View style={styles.allDayBadge}>
+              <ThemedText style={styles.allDayText}>종일</ThemedText>
+            </View>
+          )}
+        </View>
+        
         {/* 태그 데이터 임시 표시 */}
         {/* <View style={styles.tempTagInfo}>
           <ThemedText style={styles.tempTagText}>
@@ -219,44 +226,12 @@ export default function PlanScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      {/* 날짜 표시 */}
-      <ThemedView style={styles.dateSection}>
-        <ThemedText style={styles.dateText}>
-          {formatDate(selectedDate, 'MM월 DD일')} ({formatDate(selectedDate, 'relative')})
-        </ThemedText>
-        
-        {/* 디버그 정보 */}
-        {/* <ThemedView style={styles.debugSection}>
-          <ThemedText style={styles.debugText}>
-            선택된 날짜: {selectedDate}
+        {/* 계획 요약 정보 */}
+        <ThemedView style={styles.summarySection}>
+          <ThemedText style={styles.summaryText}>
+            전체 계획 {plans.length}개
           </ThemedText>
-          <ThemedText style={styles.debugText}>
-            총 계획 수: {plans.length}
-          </ThemedText>
-          <ThemedText style={styles.debugText}>
-            로딩 상태: {isLoading ? '로딩 중' : '완료'}
-          </ThemedText>
-          {error && (
-            <ThemedText style={[styles.debugText, { color: '#EF4444' }]}>
-              오류: {error.message}
-            </ThemedText>
-          )}
-          <View style={styles.debugButtonsContainer}>
-            <TouchableOpacity 
-              style={styles.refreshButton}
-              onPress={() => refetch()}
-            >
-              <ThemedText style={styles.refreshButtonText}>새로고침</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.deleteAllButton}
-              onPress={handleDeleteAllPlans}
-            >
-              <ThemedText style={styles.deleteAllButtonText}>데이터 삭제</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </ThemedView> */}
-      </ThemedView>
+        </ThemedView>
 
       {/* 계획 리스트 */}
       <FlatList
@@ -305,18 +280,18 @@ const styles = StyleSheet.create({
   addButton: {
     padding: 8,
   },
-  dateSection: {
+  summarySection: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F3F4',
   },
-  dateText: {
-    fontSize: 18,
+  summaryText: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#11181C',
-    marginBottom: 10,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   debugSection: {
     marginTop: 10,
@@ -439,6 +414,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#11181C',
     marginBottom: 8,
+  },
+  planDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 6,
+  },
+  planDate: {
+    fontSize: 14,
+    color: '#6B7280',
+    flex: 1,
+  },
+  allDayBadge: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  allDayText: {
+    fontSize: 10,
+    color: '#10B981',
+    fontWeight: '600',
   },
   planDescription: {
     fontSize: 14,

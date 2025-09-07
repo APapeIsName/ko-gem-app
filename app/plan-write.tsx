@@ -3,28 +3,28 @@ import TimePicker from '@/components/common/TimePicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useCreatePlan } from '@/hooks/api/usePlans';
+import { useCreatePlan, usePlanById, useUpdatePlan } from '@/hooks/api/usePlans';
 import { PlanFormData } from '@/types/plan/type';
-import { formatDate } from '@/utils/helpers';
+import { convertUTCToKoreanDate, createKoreanDateTime, formatDate, getKoreanDate, normalizeTags } from '@/utils/helpers';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function PlanWriteScreen() {
   const router = useRouter();
-  const { date } = useLocalSearchParams();
+  const { date, id, mode } = useLocalSearchParams();
   
-  // TanStack Query mutation 사용
+  // 편집 모드 확인
+  const isEditMode = mode === 'edit' && typeof id === 'string';
+  
+  // TanStack Query hooks
   const createPlanMutation = useCreatePlan();
+  const updatePlanMutation = useUpdatePlan();
+  const { data: existingPlan, isLoading: isLoadingPlan } = usePlanById(
+    isEditMode ? id as string : ''
+  );
   
-  // 한국 시간대를 고려한 현재 날짜 가져오기
-  const getKoreanDate = () => {
-    const now = new Date();
-    // 한국 시간대 (UTC+9)로 정확하게 변환
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const koreanTime = new Date(utc + (9 * 60000));
-    return koreanTime.toISOString().split('T')[0];
-  };
+  // 한국 시간대를 고려한 현재 날짜는 utils에서 가져옴
   
   // DatePicker와 TimePicker 상태 관리
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -35,18 +35,39 @@ export default function PlanWriteScreen() {
   // 태그 입력 상태
   const [tagInput, setTagInput] = useState('');
   
-  const [formData, setFormData] = useState<PlanFormData>({
+  const [formData, setFormData] = useState<PlanFormData>(() => ({
     title: '',
     description: '',
     startDate: date as string || getKoreanDate(),
     endDate: date as string || getKoreanDate(),
-    startTime: '09:00', // 기본값을 true로 설정
-    endTime: '10:00', // 기본값을 true로 설정
-    allDay: true, // 기본값을 true로 설정
+    startTime: '09:00',
+    endTime: '10:00',
+    allDay: true,
     location: '',
     tags: [],
     notes: '',
-  });
+  }));
+
+  // 편집 모드일 때 기존 계획 데이터로 폼 초기화
+  useEffect(() => {
+    if (isEditMode && existingPlan && !isLoadingPlan) {
+      const startDate = convertUTCToKoreanDate(existingPlan.startDate);
+      const endDate = existingPlan.endDate ? convertUTCToKoreanDate(existingPlan.endDate) : startDate;
+      
+      setFormData({
+        title: existingPlan.title || '',
+        description: existingPlan.description || '',
+        startDate: startDate,
+        endDate: endDate,
+        startTime: existingPlan.startTime || '09:00',
+        endTime: existingPlan.endTime || '10:00',
+        allDay: existingPlan.allDay || false,
+        location: existingPlan.location || '',
+        tags: normalizeTags(existingPlan.tags),
+        notes: existingPlan.notes || '',
+      });
+    }
+  }, [isEditMode, existingPlan, isLoadingPlan]);
 
   const handleBackPress = () => {
     router.back();
@@ -54,20 +75,26 @@ export default function PlanWriteScreen() {
 
   // 태그 추가
   const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags?.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), tagInput.trim()]
-      }));
+    const trimmedTag = tagInput.trim();
+    if (trimmedTag) {
+      const currentTags = normalizeTags(formData.tags);
+      if (!currentTags.includes(trimmedTag)) {
+        setFormData(prev => ({
+          ...prev,
+          tags: [...currentTags, trimmedTag]
+        }));
+      }
       setTagInput('');
     }
   };
 
   // 태그 제거
   const handleRemoveTag = (index: number) => {
+    const currentTags = normalizeTags(formData.tags);
+    const updatedTags = currentTags.filter((_, i) => i !== index);
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags?.filter((_, i) => i !== index) || []
+      tags: updatedTags
     }));
   };
 
@@ -141,32 +168,66 @@ export default function PlanWriteScreen() {
       
       console.log('계획 저장 시작:', formData);
       
-      // startDate와 startTime을 결합하여 완전한 날짜시간 문자열 생성
       const planData = {
         ...formData,
-        startDate: formData.allDay 
-          ? `${formData.startDate}T00:00:00.000Z`
-          : `${formData.startDate}T${formData.startTime}:00.000Z`,
-        endDate: formData.allDay 
-          ? `${formData.endDate || formData.startDate}T23:59:59.999Z`
-          : `${formData.endDate || formData.startDate}T${formData.endTime}:00.000Z`,
+        tags: normalizeTags(formData.tags), // 태그 정규화
+        startDate: createKoreanDateTime(formData.startDate, formData.startTime || '09:00', formData.allDay, false),
+        endDate: createKoreanDateTime(
+          formData.endDate || formData.startDate, 
+          formData.endTime || '10:00', 
+          formData.allDay, 
+          true
+        ),
       };
       
       console.log('수정된 계획 데이터:', planData);
       
-      // TanStack Query mutation 사용
-      await createPlanMutation.mutateAsync(planData);
-      console.log('계획 저장 완료');
+      if (isEditMode) {
+        // 편집 모드: 계획 업데이트
+        await updatePlanMutation.mutateAsync({
+          id: id as string,
+          updateData: planData
+        });
+        console.log('계획 업데이트 완료');
+      } else {
+        // 새 계획 생성
+        await createPlanMutation.mutateAsync(planData);
+        console.log('계획 생성 완료');
+      }
       
       // 저장 성공 후 뒤로 가기
       router.back();
     } catch (error) {
       console.error('Failed to save plan:', error);
-      Alert.alert('오류', '계획 저장에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
+      const errorMessage = isEditMode ? '계획 수정에 실패했습니다' : '계획 저장에 실패했습니다';
+      Alert.alert('오류', `${errorMessage}: ` + (error instanceof Error ? error.message : String(error)));
     }
   };
 
   const isFormValid = formData.title.trim().length > 0;
+  const isSaving = isEditMode ? updatePlanMutation.isPending : createPlanMutation.isPending;
+
+  // 로딩 중인 경우 로딩 화면 표시
+  if (isEditMode && isLoadingPlan) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBackPress}
+            activeOpacity={0.7}
+          >
+            <IconSymbol name="arrow-back" size={24} color="#11181C" />
+          </TouchableOpacity>
+          <ThemedText style={styles.headerTitle}>계획 수정</ThemedText>
+          <View style={styles.saveButton} />
+        </ThemedView>
+        <ThemedView style={styles.loadingContainer}>
+          <ThemedText style={styles.loadingText}>계획을 불러오는 중...</ThemedText>
+        </ThemedView>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -180,16 +241,21 @@ export default function PlanWriteScreen() {
           <IconSymbol name="arrow-back" size={24} color="#11181C" />
         </TouchableOpacity>
         
-        <ThemedText style={styles.headerTitle}>새 계획 작성</ThemedText>
+        <ThemedText style={styles.headerTitle}>
+          {isEditMode ? '계획 수정' : '새 계획 작성'}
+        </ThemedText>
         
         <TouchableOpacity
-          style={[styles.saveButton, (!isFormValid || createPlanMutation.isPending) && styles.saveButtonDisabled]}
+          style={[styles.saveButton, (!isFormValid || isSaving) && styles.saveButtonDisabled]}
           onPress={handleSave}
-          disabled={!isFormValid || createPlanMutation.isPending}
+          disabled={!isFormValid || isSaving}
           activeOpacity={0.7}
         >
-          <ThemedText style={[styles.saveButtonText, (!isFormValid || createPlanMutation.isPending) && styles.saveButtonTextDisabled]}>
-            {createPlanMutation.isPending ? '저장 중...' : '저장'}
+          <ThemedText style={[styles.saveButtonText, (!isFormValid || isSaving) && styles.saveButtonTextDisabled]}>
+            {isSaving 
+              ? (isEditMode ? '수정 중...' : '저장 중...') 
+              : (isEditMode ? '수정' : '저장')
+            }
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
@@ -324,22 +390,25 @@ export default function PlanWriteScreen() {
                 <IconSymbol name="add" size={20} color="#10B981" />
               </TouchableOpacity>
             </View>
-            {formData.tags && formData.tags.length > 0 && (
-              <View style={styles.tagList}>
-                {formData.tags.map((tag, index) => (
-                  <View key={index} style={styles.tagItem}>
-                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
-                    <TouchableOpacity
-                      style={styles.removeTagButton}
-                      onPress={() => handleRemoveTag(index)}
-                      activeOpacity={0.7}
-                    >
-                      <IconSymbol name="close" size={16} color="#6B7280" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
+            {(() => {
+              const normalizedTags = normalizeTags(formData.tags);
+              return normalizedTags.length > 0 && (
+                <View style={styles.tagList}>
+                  {normalizedTags.map((tag, index) => (
+                    <View key={index} style={styles.tagItem}>
+                      <ThemedText style={styles.tagText}>#{tag}</ThemedText>
+                      <TouchableOpacity
+                        style={styles.removeTagButton}
+                        onPress={() => handleRemoveTag(index)}
+                        activeOpacity={0.7}
+                      >
+                        <IconSymbol name="close" size={16} color="#6B7280" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              );
+            })()}
           </ThemedView>
 
           {/* 설명 입력 */}
@@ -637,5 +706,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
   },
 });

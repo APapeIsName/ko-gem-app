@@ -9,7 +9,7 @@ import {
     PlanSyncState,
     PlanUpdateData,
 } from '@/types/plan/type';
-import { generateId, parseDate } from '@/utils/helpers';
+import { convertUTCToKoreanDate, generateId, parseDate } from '@/utils/helpers';
 
 // 계획 서비스 클래스
 export class PlanService {
@@ -222,23 +222,14 @@ export class PlanService {
 
   // 날짜별 계획 조회
   async getPlansByDate(date: string): Promise<Plan[]> {
-    console.log('getPlansByDate 호출, 요청 날짜:', date);
-    
     const plans = await this.getAllPlans();
-    console.log('전체 계획 수:', plans.length);
     
     const filteredPlans = plans.filter(plan => {
       // 저장된 날짜를 한국 시간대로 변환하여 비교
-      const planDate = new Date(plan.startDate);
-      const koreanDate = new Date(planDate.getTime() + (9 * 60 * 60 * 1000));
-      const planDateString = koreanDate.toISOString().split('T')[0];
-      
-      const matches = planDateString === date;
-      console.log(`계획 ${plan.id}: ${planDateString} === ${date} = ${matches}`);
-      return matches;
+      const planDateString = convertUTCToKoreanDate(plan.startDate);
+      return planDateString === date;
     });
     
-    console.log('필터링된 계획 수:', filteredPlans.length);
     return filteredPlans;
   }
 
@@ -247,9 +238,7 @@ export class PlanService {
     const plans = await this.getAllPlans();
     return plans.filter(plan => {
       // 저장된 날짜를 한국 시간대로 변환하여 비교
-      const planDate = new Date(plan.startDate);
-      const koreanDate = new Date(planDate.getTime() + (9 * 60 * 60 * 1000));
-      const planDateString = koreanDate.toISOString().split('T')[0];
+      const planDateString = convertUTCToKoreanDate(plan.startDate);
       
       return planDateString >= startDate && planDateString <= endDate;
     });
