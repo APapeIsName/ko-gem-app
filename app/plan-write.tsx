@@ -3,19 +3,26 @@ import TimePicker from '@/components/common/TimePicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useCreatePlan } from '@/hooks/api/usePlans';
-import { PlanFormData } from '@/types/plan/type';
+import { useCreatePlan, usePlanById, useUpdatePlan } from '@/hooks/api/usePlans';
+import { Plan, PlanFormData } from '@/types/plan/type';
 import { formatDate } from '@/utils/helpers';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function PlanWriteScreen() {
   const router = useRouter();
-  const { date } = useLocalSearchParams();
+  const { date, id, mode } = useLocalSearchParams();
   
-  // TanStack Query mutation 사용
+  // 편집 모드 확인
+  const isEditMode = mode === 'edit' && typeof id === 'string';
+  
+  // TanStack Query hooks
   const createPlanMutation = useCreatePlan();
+  const updatePlanMutation = useUpdatePlan();
+  const { data: existingPlan, isLoading: isLoadingPlan } = usePlanById(
+    isEditMode ? id as string : ''
+  );
   
   // 한국 시간대를 고려한 현재 날짜 가져오기
   const getKoreanDate = () => {
@@ -40,13 +47,34 @@ export default function PlanWriteScreen() {
     description: '',
     startDate: date as string || getKoreanDate(),
     endDate: date as string || getKoreanDate(),
-    startTime: '09:00', // 기본값을 true로 설정
-    endTime: '10:00', // 기본값을 true로 설정
-    allDay: true, // 기본값을 true로 설정
+    startTime: '09:00',
+    endTime: '10:00',
+    allDay: true,
     location: '',
     tags: [],
     notes: '',
   });
+
+  // 편집 모드일 때 기존 계획 데이터로 폼 초기화
+  useEffect(() => {
+    if (isEditMode && existingPlan && !isLoadingPlan) {
+      const startDate = new Date(existingPlan.startDate);
+      const endDate = existingPlan.endDate ? new Date(existingPlan.endDate) : startDate;
+      
+      setFormData({
+        title: existingPlan.title || '',
+        description: existingPlan.description || '',
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        startTime: existingPlan.startTime || '09:00',
+        endTime: existingPlan.endTime || '10:00',
+        allDay: existingPlan.allDay || false,
+        location: existingPlan.location || '',
+        tags: existingPlan.tags || [],
+        notes: existingPlan.notes || '',
+      });
+    }
+  }, [isEditMode, existingPlan, isLoadingPlan]);
 
   const handleBackPress = () => {
     router.back();
@@ -154,19 +182,52 @@ export default function PlanWriteScreen() {
       
       console.log('수정된 계획 데이터:', planData);
       
-      // TanStack Query mutation 사용
-      await createPlanMutation.mutateAsync(planData);
-      console.log('계획 저장 완료');
+      if (isEditMode) {
+        // 편집 모드: 계획 업데이트
+        await updatePlanMutation.mutateAsync({
+          id: id as string,
+          updateData: planData
+        });
+        console.log('계획 업데이트 완료');
+      } else {
+        // 새 계획 생성
+        await createPlanMutation.mutateAsync(planData);
+        console.log('계획 생성 완료');
+      }
       
       // 저장 성공 후 뒤로 가기
       router.back();
     } catch (error) {
       console.error('Failed to save plan:', error);
-      Alert.alert('오류', '계획 저장에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
+      const errorMessage = isEditMode ? '계획 수정에 실패했습니다' : '계획 저장에 실패했습니다';
+      Alert.alert('오류', `${errorMessage}: ` + (error instanceof Error ? error.message : String(error)));
     }
   };
 
   const isFormValid = formData.title.trim().length > 0;
+  const isSaving = isEditMode ? updatePlanMutation.isPending : createPlanMutation.isPending;
+
+  // 로딩 중인 경우 로딩 화면 표시
+  if (isEditMode && isLoadingPlan) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBackPress}
+            activeOpacity={0.7}
+          >
+            <IconSymbol name="arrow-back" size={24} color="#11181C" />
+          </TouchableOpacity>
+          <ThemedText style={styles.headerTitle}>계획 수정</ThemedText>
+          <View style={styles.saveButton} />
+        </ThemedView>
+        <ThemedView style={styles.loadingContainer}>
+          <ThemedText style={styles.loadingText}>계획을 불러오는 중...</ThemedText>
+        </ThemedView>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -180,16 +241,21 @@ export default function PlanWriteScreen() {
           <IconSymbol name="arrow-back" size={24} color="#11181C" />
         </TouchableOpacity>
         
-        <ThemedText style={styles.headerTitle}>새 계획 작성</ThemedText>
+        <ThemedText style={styles.headerTitle}>
+          {isEditMode ? '계획 수정' : '새 계획 작성'}
+        </ThemedText>
         
         <TouchableOpacity
-          style={[styles.saveButton, (!isFormValid || createPlanMutation.isPending) && styles.saveButtonDisabled]}
+          style={[styles.saveButton, (!isFormValid || isSaving) && styles.saveButtonDisabled]}
           onPress={handleSave}
-          disabled={!isFormValid || createPlanMutation.isPending}
+          disabled={!isFormValid || isSaving}
           activeOpacity={0.7}
         >
-          <ThemedText style={[styles.saveButtonText, (!isFormValid || createPlanMutation.isPending) && styles.saveButtonTextDisabled]}>
-            {createPlanMutation.isPending ? '저장 중...' : '저장'}
+          <ThemedText style={[styles.saveButtonText, (!isFormValid || isSaving) && styles.saveButtonTextDisabled]}>
+            {isSaving 
+              ? (isEditMode ? '수정 중...' : '저장 중...') 
+              : (isEditMode ? '수정' : '저장')
+            }
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
@@ -637,5 +703,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
   },
 });
