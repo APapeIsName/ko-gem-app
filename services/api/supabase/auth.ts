@@ -1,5 +1,28 @@
 import { supabase } from './client';
 
+// Apple 로그인 (Identity Token 방식)
+export const signInWithApple = async (identityToken: string) => {
+  try {
+    console.log('Apple Identity Token으로 Supabase 인증 시작');
+    
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'apple',
+      token: identityToken,
+    });
+    
+    if (error) {
+      console.error('Apple Supabase 인증 오류:', error);
+      throw error;
+    }
+    
+    console.log('Apple 로그인 성공:', data.user?.email);
+    return data;
+  } catch (error) {
+    console.error('signInWithApple 오류:', error);
+    throw error;
+  }
+};
+
 export const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',

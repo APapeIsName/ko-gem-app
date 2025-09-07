@@ -6,16 +6,20 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kogem",
-    "redirectUri": "kogem://auth/callback",
     "linking": {
-      "schemes": ["kogem"],
-      "prefixes": ["kogem://"]
+      "schemes": [
+        "kogem"
+      ],
+      "prefixes": [
+        "kogem://"
+      ]
     },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.apape.kogem"
+      "bundleIdentifier": "com.apape.kogem.dev",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {

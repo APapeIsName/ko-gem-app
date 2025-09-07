@@ -2,7 +2,8 @@ import { DeepLinkHandler } from '@/components/auth/DeepLinkHandler';
 import { AuthPlatformButton } from '@/components/auth/login/AuthPlatformButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { setSessionFromUrl, signInWithGoogle } from '@/services/api/supabase/auth';
+import { setSessionFromUrl, signInWithApple, signInWithGoogle } from '@/services/api/supabase/auth';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Alert, Dimensions, Modal, Platform, StyleSheet, View } from 'react-native';
@@ -156,9 +157,65 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAppleLogin = () => {
-    // TODO: Apple OAuth 로그인 구현
-    console.log('Apple 로그인');
+  const handleAppleLogin = async () => {
+    try {
+      setIsLoading(true);
+      console.log('Apple 로그인 시작');
+      
+      // Apple 로그인 가능 여부 확인
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      console.log('Apple 로그인 가능 여부:', isAvailable);
+      
+      if (!isAvailable) {
+        throw new Error('이 기기에서는 Apple 로그인을 사용할 수 없습니다.');
+      }
+      
+      // Apple Authentication 요청
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      
+      console.log('Apple 인증 완료:', {
+        user: credential.user,
+        email: credential.email,
+        fullName: credential.fullName,
+        identityToken: credential.identityToken
+      });
+      
+      // Identity Token이 있는지 확인
+      if (credential.identityToken) {
+        // Supabase로 Apple 로그인
+        const data = await signInWithApple(credential.identityToken);
+        
+        setIsLoading(false);
+        Alert.alert('로그인 성공', `${data.user?.email || credential.email || '사용자'}로 Apple 로그인되었습니다!`, [
+          { text: '확인', onPress: () => router.replace('/(tabs)') }
+        ]);
+      } else {
+        throw new Error('Apple에서 Identity Token을 받을 수 없습니다.');
+      }
+    } catch (error: any) {
+      console.error('Apple 로그인 오류 상세:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack,
+        fullError: error
+      });
+      setIsLoading(false);
+      
+      // 사용자가 취소한 경우
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        console.log('사용자가 Apple 로그인을 취소했습니다.');
+        return;
+      }
+      
+      // 기타 오류
+      Alert.alert('Apple 로그인 실패', `오류 코드: ${error.code}\n메시지: ${error.message || '알 수 없는 오류'}`);
+    }
   };
 
   const handleDeepLinkSuccess = async (url: string) => {
@@ -234,14 +291,18 @@ export default function LoginScreen() {
           textColor={isLoading ? "#9CA3AF" : "#000000"}
           logoImage={require('@/assets/images/logo-google.png')}
         />
-        {/* <AuthPlatformButton 
-          platform="apple" 
-          onPress={handleAppleLogin} 
-          platformName="Apple"
-          backgroundColor="#000000"
-          textColor="#FFFFFF"
-          logoImage={require('@/assets/images/logo-apple.png')}
-        /> */}
+        
+        {/* iOS에서만 Apple 로그인 버튼 표시 */}
+        {Platform.OS === 'ios' && (
+          <AuthPlatformButton 
+            platform="apple" 
+            onPress={handleAppleLogin} 
+            platformName={isLoading ? "로그인 중..." : "Apple"}
+            backgroundColor={isLoading ? "#E5E7EB" : "#000000"}
+            textColor={isLoading ? "#9CA3AF" : "#FFFFFF"}
+            logoImage={require('@/assets/images/logo-apple.png')}
+          />
+        )}
       </View>
 
       {/* OAuth WebView */}
