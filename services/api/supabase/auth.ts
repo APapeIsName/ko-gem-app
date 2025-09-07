@@ -47,6 +47,8 @@ export const signInWithGoogle = async () => {
 export const setSessionFromUrl = async (url: string) => {
   try {
     console.log('URL에서 세션 설정 시도:', url);
+    console.log('🔍 Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+    console.log('🔍 Supabase Key 앞부분:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 30) + '...');
     
     // URL에서 파라미터 추출
     const urlObj = new URL(url);
@@ -66,19 +68,43 @@ export const setSessionFromUrl = async (url: string) => {
     
     if (accessToken && refreshToken) {
       console.log('토큰으로 세션 설정 중...');
+      console.log('🔍 Access Token 앞부분:', accessToken.substring(0, 50) + '...');
+      console.log('🔍 Refresh Token:', refreshToken);
       
+      // 먼저 간단한 API 호출로 클라이언트 테스트
+      console.log('🧪 클라이언트 기본 테스트 시작...');
+      try {
+        const { data: testData, error: testError } = await supabase.auth.getSession();
+        console.log('🧪 getSession 결과:', { 
+          hasData: !!testData, 
+          hasUser: !!testData?.session?.user,
+          error: testError 
+        });
+      } catch (testErr) {
+        console.log('🧪 getSession 오류:', testErr);
+      }
+      
+      // setSession 시도
+      console.log('🧪 setSession 시도...');
       const { data, error } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       });
       
       if (error) {
-        console.error('세션 설정 오류:', error);
+        console.error('🧪 setSession 오류 상세:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText,
+          name: error.name,
+          stack: error.stack
+        });
         throw error;
       }
       
-      console.log('세션 설정 성공:', data.user?.email);
+      console.log('✅ setSession 성공!', data.user?.email);
       return data;
+      
     } else {
       throw new Error('토큰을 찾을 수 없습니다.');
     }

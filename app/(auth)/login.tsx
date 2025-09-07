@@ -129,6 +129,12 @@ export default function LoginScreen() {
   const [showWebView, setShowWebView] = useState(false);
   const [oauthUrl, setOauthUrl] = useState('');
 
+  // 🚧 임시: 로그인 건너뛰기
+  React.useEffect(() => {
+    console.log('🚧 임시로 로그인 건너뛰기 - 메인 화면으로 이동');
+    router.replace('/(tabs)');
+  }, []);
+
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
@@ -223,6 +229,8 @@ export default function LoginScreen() {
     
     try {
       setIsLoading(true);
+      console.log('Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+      console.log('Supabase Key:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
       
       // Supabase 세션 설정
       const sessionData = await setSessionFromUrl(url);
